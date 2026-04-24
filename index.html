@@ -42,23 +42,32 @@
             scroll-behavior: smooth;
         }
 
+        @media screen {
+            .slide {
+                width: 95vw;
+                max-width: 1600px;
+                aspect-ratio: 16 / 9;
+                height: auto;
+                min-height: 600px;
+                overflow-y: auto;
+            }
+        }
+
         .slide {
-            width: 297mm; 
-            height: 210mm;
-            overflow: hidden;
             margin: 0 auto 20px auto;
             position: relative;
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
             background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid), var(--bg-black));
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             border: 1px solid #333;
             display: flex;
             flex-direction: column;
-            padding: 15mm;
+            padding: 3vw;
             transition: opacity 0.3s ease;
+            
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         @page {
@@ -74,15 +83,12 @@
                 margin: 0;
             }
             .slide { 
-                width: 297mm; 
-                height: 210mm;
+                width: 297mm !important; 
+                height: 210mm !important;
+                aspect-ratio: auto !important;
                 margin: 0; 
                 box-shadow: none; 
                 border: none; 
-                page-break-after: always;
-                break-after: page;
-                page-break-inside: avoid;
-                break-inside: avoid;
                 overflow: hidden;
                 display: flex !important;
             }
@@ -396,7 +402,7 @@
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            padding: 3vw 3vw 100px 3vw !important; 
+            padding: 3vw 3vw 100px 3vw !important; /* Space for buttons */
             animation: fadeIn 0.4s ease;
         }
 
@@ -409,11 +415,24 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* =========================================================
-           ✅ NEW ADDITIONS: MOBILE OPTIMIZATIONS
-           ========================================================= */
-        @media (max-width: 768px) {
-            /* Scale down UI controls so they don't block content on mobile */
+        /* --- RESPONSIVE STACKING: MOBILE & TABLET --- */
+        @media (max-width: 950px) {
+            .slide {
+                width: 100vw !important;
+                aspect-ratio: auto !important; 
+                min-height: 100vh !important;
+                border-radius: 0;
+                padding: 5vw !important;
+            }
+            
+            .layout-side { flex-direction: column !important; }
+            .layout-side > .glass-panel { width: 100% !important; }
+            .columns { flex-direction: column !important; gap: 15px !important; }
+            .grid-cards { grid-template-columns: 1fr !important; gap: 15px !important; }
+            
+            .image-grid { flex-wrap: wrap; }
+            .image-grid img { width: 100%; min-width: 100%; }
+
             .toggle-container {
                 top: 10px;
                 right: 10px;
@@ -425,14 +444,12 @@
             .pres-controls {
                 bottom: 10px;
                 transform: translateX(-50%) scale(0.85);
-                padding: 8px 15px;
             }
-            /* Adjust padding on mobile landscape so content isn't squashed */
+
             body.presentation-active .slide.active {
-                padding: 15px 15px 70px 15px !important; 
+                padding-bottom: 90px !important;
             }
         }
-
     </style>
 </head>
 <body>
@@ -493,26 +510,6 @@
             }
         }
 
-        /* --- LOGIC FOR PRESENTATION MODE --- */
-        function togglePresentationMode() {
-            isPresentationMode = document.getElementById('mode-toggle').checked;
-            const controls = document.getElementById('pres-controls');
-            
-            if (isPresentationMode) {
-                document.body.classList.add('presentation-active');
-                controls.style.display = 'flex';
-                syncSlides();
-            } else {
-                document.body.classList.remove('presentation-active');
-                controls.style.display = 'none';
-                const slides = document.querySelectorAll('.slide');
-                slides.forEach(s => {
-                    s.style.display = ''; 
-                    s.classList.remove('active');
-                });
-            }
-        }
-
         function syncSlides() {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) return;
@@ -523,6 +520,7 @@
             slides.forEach((s, idx) => {
                 if (idx === currentSlideIndex) {
                     s.classList.add('active');
+                    s.scrollTop = 0;
                 } else {
                     s.classList.remove('active');
                 }
@@ -547,7 +545,6 @@
             }
         }
 
-        // Keyboard support
         document.addEventListener('keydown', (e) => {
             if (!isPresentationMode) return;
             if (e.key === "ArrowRight") nextSlide();
@@ -555,72 +552,103 @@
         });
 
         // =========================================================================
-        // ✅ NEW LOGIC: FULLSCREEN API WITH MOBILE SCREEN ROTATION LOCK
+        // ✅ NEW: UNIFIED YOUTUBE-STYLE FULLSCREEN & ORIENTATION LOCK LOGIC
         // =========================================================================
-        function toggleFullscreen() {
+        
+        function requestFSAndLock() {
             const doc = document.documentElement;
-            // Support for all standard and older browsers
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            let requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
+            if (requestFS) {
+                let promise = requestFS.call(doc);
+                if (promise !== undefined) {
+                    promise.then(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock("landscape").catch(e => console.log(e));
+                        }
+                    }).catch(err => console.log(err));
+                } else {
+                    setTimeout(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock("landscape").catch(e => console.log(e));
+                        }
+                    }, 300);
+                }
+            }
+        }
 
-            if (!isFullscreen) {
-                let requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
-                if (requestFS) {
-                    let promise = requestFS.call(doc);
-                    // Standard modern browsers return a promise
-                    if (promise !== undefined) {
-                        promise.then(() => {
-                            // Lock orientation to Landscape on Mobile
-                            if (screen.orientation && screen.orientation.lock) {
-                                screen.orientation.lock("landscape").catch(err => console.log("Orientation lock failed:", err));
-                            }
-                        }).catch(err => console.log("Fullscreen failed:", err));
-                    } else {
-                        // Fallback for Safari/older browsers
-                        setTimeout(() => {
-                            if (screen.orientation && screen.orientation.lock) {
-                                screen.orientation.lock("landscape").catch(err => console.log(err));
-                            }
-                        }, 300);
-                    }
-                }
+        function exitFSAndUnlock() {
+            let exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+            if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
+                exitFS.call(document);
+            }
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        }
+
+        function updatePresentationUI(active) {
+            const controls = document.getElementById('pres-controls');
+            const fsBtn = document.getElementById('fullscreen-btn');
+            
+            if (active) {
+                document.body.classList.add('presentation-active');
+                controls.style.display = 'flex';
+                fsBtn.innerText = "EXIT FULLSCREEN";
+                syncSlides();
             } else {
-                let exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-                if (exitFS) {
-                    exitFS.call(document);
-                }
-                // Unlock orientation upon exiting fullscreen
+                document.body.classList.remove('presentation-active');
+                controls.style.display = 'none';
+                fsBtn.innerText = "ENTER FULLSCREEN";
+                const slides = document.querySelectorAll('.slide');
+                slides.forEach(s => {
+                    s.style.display = ''; 
+                    s.classList.remove('active');
+                });
+            }
+        }
+
+        function togglePresentationMode() {
+            isPresentationMode = document.getElementById('mode-toggle').checked;
+            if (isPresentationMode) {
+                requestFSAndLock();
+            } else {
+                exitFSAndUnlock();
+            }
+            updatePresentationUI(isPresentationMode);
+        }
+
+        function toggleFullscreen() {
+            isPresentationMode = !isPresentationMode;
+            document.getElementById('mode-toggle').checked = isPresentationMode;
+            
+            if (isPresentationMode) {
+                requestFSAndLock();
+            } else {
+                exitFSAndUnlock();
+            }
+            updatePresentationUI(isPresentationMode);
+        }
+
+        // Sync UI if user exits fullscreen via browser (like hitting ESC)
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (!isFullscreen && isPresentationMode) {
+                isPresentationMode = false;
+                document.getElementById('mode-toggle').checked = false;
+                updatePresentationUI(false);
                 if (screen.orientation && screen.orientation.unlock) {
                     screen.orientation.unlock();
                 }
             }
         }
 
-        // Auto-sync Presentation Mode & Fullscreen state
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari support
-        document.addEventListener('msfullscreenchange', handleFullscreenChange); // IE11 support
-
-        function handleFullscreenChange() {
-            const fsBtn = document.getElementById('fullscreen-btn');
-            const modeToggle = document.getElementById('mode-toggle');
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            
-            if (isFullscreen) {
-                fsBtn.innerText = "EXIT FULLSCREEN";
-                if (!isPresentationMode) {
-                    modeToggle.checked = true;
-                    togglePresentationMode();
-                }
-            } else {
-                fsBtn.innerText = "ENTER FULLSCREEN";
-                if (isPresentationMode) {
-                    modeToggle.checked = false;
-                    togglePresentationMode();
-                }
-            }
-        }
-
-        // REST OF EXISTING DATA
+        // =========================================================================
+        // DATA & HTML GENERATION LOGIC
+        // =========================================================================
         const eventsList = [
             { category: "TECH & ROBOTICS", name: "Codebuster", keyword: "coding" },
             { category: "TECH & ROBOTICS", name: "Line Follower", keyword: "robotics" },
