@@ -58,6 +58,7 @@
             display: flex;
             flex-direction: column;
             padding: 15mm;
+            transition: opacity 0.3s ease;
         }
 
         @page {
@@ -83,8 +84,9 @@
                 page-break-inside: avoid;
                 break-inside: avoid;
                 overflow: hidden;
+                display: flex !important;
             }
-            .delete-btn, .restore-btn {
+            .delete-btn, .restore-btn, .pres-controls, .toggle-container {
                 display: none !important;
             }
         }
@@ -159,21 +161,15 @@
             border-radius: 8px;
             border: 1px solid var(--glass-border);
         }
-        .image-grid.single-col { 
-            flex-direction: column; 
-        }
-        .image-grid.single-col img {
-            max-height: 240px;
-        }
+        .image-grid.single-col { flex-direction: column; }
+        .image-grid.single-col img { max-height: 240px; }
 
         .layout-side {
             display: flex;
             gap: 25px;
             flex: 1;
         }
-        .layout-side > .glass-panel {
-            width: 50%;
-        }
+        .layout-side > .glass-panel { width: 50%; }
 
         .layout-grid {
             display: flex;
@@ -264,9 +260,7 @@
             justify-content: center;
             transition: background-color 0.2s;
         }
-        .delete-btn:hover {
-            background-color: rgba(239, 68, 68, 1);
-        }
+        .delete-btn:hover { background-color: rgba(239, 68, 68, 1); }
 
         .restore-btn {
             position: fixed;
@@ -286,14 +280,156 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             transition: background-color 0.2s, transform 0.2s;
         }
-        .restore-btn:hover {
-            background-color: #7dd3fc;
-            transform: translateY(-2px);
+        .restore-btn:hover { background-color: #7dd3fc; transform: translateY(-2px); }
+
+        /* --- NEW PRESENTATION UI CSS --- */
+        .toggle-container {
+            position: fixed;
+            top: 20px;
+            right: 20px; /* Positioned out of the way */
+            z-index: 1001;
+            background: var(--glass-bg);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: opacity 0.3s ease;
+        }
+
+        #fullscreen-btn {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: var(--font-subheading);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(192, 132, 252, 0.4);
+            transition: background 0.3s, transform 0.2s;
+        }
+        #fullscreen-btn:hover { background: #d8b4fe; transform: scale(1.05); }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .pres-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 20px;
+            z-index: 1001;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 40px;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn {
+            background: var(--accent-blue);
+            color: var(--bg-black);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .nav-btn:hover:not(:disabled) { transform: scale(1.05); background: #7dd3fc; }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* =========================================================
+           ✅ FULLSCREEN / MAXIMIZED PRESENTATION MODE CSS
+           ========================================================= */
+        body.presentation-active {
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: block; /* Overrides default body layout to allow 100vw slide */
+            background-color: var(--bg-black);
+        }
+
+        body.presentation-active .slide {
+            display: none; /* Hide all slides by default */
+        }
+
+        /* This is the magic that maximizes the slide */
+        body.presentation-active .slide.active {
+            display: flex;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none;
+            max-height: none;
+            margin: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 3vw 3vw 100px 3vw !important; /* Bottom padding ensures content doesn't hit nav buttons */
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Hide the delete buttons during presentation for a clean look */
+        body.presentation-active .delete-btn {
+            display: none !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
     </style>
 </head>
 <body>
+
+    <div class="toggle-container" id="top-controls">
+        <button id="fullscreen-btn" onclick="toggleFullscreen()">ENTER FULLSCREEN</button>
+        <span style="font-family: var(--font-subheading); font-size: 14px; color: var(--accent-blue); font-weight: bold;">PRESENTATION MODE</span>
+        <label class="switch">
+            <input type="checkbox" id="mode-toggle" onclick="togglePresentationMode()">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="pres-controls" id="pres-controls">
+        <button class="nav-btn" onclick="prevSlide()" id="prev-btn">⬅ PREV</button>
+        <button class="nav-btn" onclick="nextSlide()" id="next-btn">NEXT ➡</button>
+    </div>
 
     <button id="restore-btn" class="restore-btn" onclick="restoreSlide()">↺ Restore Slide</button>
 
@@ -301,17 +437,20 @@
 
     <script>
         let deletedSlidesStack = [];
+        let currentSlideIndex = 0;
+        let isPresentationMode = false;
 
         function deleteSlide(btn) {
             const slide = btn.closest('.slide');
             const placeholder = document.createElement('div');
-            placeholder.style.display = 'none'; // Hidden anchor to remember position
+            placeholder.style.display = 'none'; 
             slide.parentNode.insertBefore(placeholder, slide);
             
             deletedSlidesStack.push({ slide: slide, placeholder: placeholder });
             slide.remove();
             
             updateRestoreButton();
+            if(isPresentationMode) syncSlides();
         }
 
         function restoreSlide() {
@@ -321,6 +460,7 @@
             lastDeleted.placeholder.remove();
             
             updateRestoreButton();
+            if(isPresentationMode) syncSlides();
         }
 
         function updateRestoreButton() {
@@ -333,6 +473,112 @@
             }
         }
 
+        /* --- LOGIC FOR PRESENTATION MODE --- */
+        function togglePresentationMode() {
+            isPresentationMode = document.getElementById('mode-toggle').checked;
+            const controls = document.getElementById('pres-controls');
+            
+            if (isPresentationMode) {
+                document.body.classList.add('presentation-active');
+                controls.style.display = 'flex';
+                syncSlides(); // Ensure correct slide shows up
+            } else {
+                document.body.classList.remove('presentation-active');
+                controls.style.display = 'none';
+                const slides = document.querySelectorAll('.slide');
+                slides.forEach(s => {
+                    s.style.display = ''; // Reverts to original flex layout
+                    s.classList.remove('active');
+                });
+            }
+        }
+
+        function syncSlides() {
+            const slides = document.querySelectorAll('.slide');
+            if (slides.length === 0) return;
+            
+            if (currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1;
+            if (currentSlideIndex < 0) currentSlideIndex = 0;
+
+            slides.forEach((s, idx) => {
+                if (idx === currentSlideIndex) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+
+            document.getElementById('prev-btn').disabled = (currentSlideIndex === 0);
+            document.getElementById('next-btn').disabled = (currentSlideIndex === slides.length - 1);
+        }
+
+        function nextSlide() {
+            const slides = document.querySelectorAll('.slide');
+            if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                syncSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                syncSlides();
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (!isPresentationMode) return;
+            if (e.key === "ArrowRight") nextSlide();
+            if (e.key === "ArrowLeft") prevSlide();
+        });
+
+        // =========================================================================
+        // ✅ LOGIC: FULLSCREEN API CONTROLS
+        // =========================================================================
+        function toggleFullscreen() {
+            const doc = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (doc.requestFullscreen) {
+                    doc.requestFullscreen();
+                } else if (doc.webkitRequestFullscreen) { /* Safari */
+                    doc.webkitRequestFullscreen();
+                } else if (doc.msRequestFullscreen) { /* IE11 */
+                    doc.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // Auto-sync Presentation Mode & Fullscreen state
+        document.addEventListener('fullscreenchange', () => {
+            const fsBtn = document.getElementById('fullscreen-btn');
+            const modeToggle = document.getElementById('mode-toggle');
+            
+            if (document.fullscreenElement) {
+                fsBtn.innerText = "EXIT FULLSCREEN";
+                if (!isPresentationMode) {
+                    modeToggle.checked = true;
+                    togglePresentationMode();
+                }
+            } else {
+                fsBtn.innerText = "ENTER FULLSCREEN";
+                if (isPresentationMode) {
+                    modeToggle.checked = false;
+                    togglePresentationMode();
+                }
+            }
+        });
+
+        // REST OF EXISTING DATA
         const eventsList = [
             { category: "TECH & ROBOTICS", name: "Codebuster", keyword: "coding" },
             { category: "TECH & ROBOTICS", name: "Line Follower", keyword: "robotics" },
@@ -839,7 +1085,7 @@
                         <p style="margin-bottom: 12px;"><strong>Theme:</strong> ${data.theme}<br>${data.objective}</p>
                         
                         <h3 class="subheading">2. Requirements</h3>
-                        <ul>
+                        <ul style="margin-bottom: 15px;">
                             ${data.requirements.map(req => `<li>${req}</li>`).join('')}
                         </ul>
                         ${img0 ? `
@@ -850,7 +1096,7 @@
                     
                     <div class="glass-panel">
                         <h3 class="subheading">3. Comprehensive Guidelines</h3>
-                        <ul>
+                        <ul style="margin-bottom: 15px;">
                             ${data.guidelines.map(g => `<li>${g}</li>`).join('')}
                         </ul>
                         ${img1 ? `
