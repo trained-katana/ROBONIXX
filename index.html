@@ -44,7 +44,8 @@
 
         .slide {
             width: 297mm; 
-            min-height: 210mm;
+            height: 210mm;
+            overflow: hidden;
             margin: 0 auto 20px auto;
             position: relative;
             page-break-after: always;
@@ -69,6 +70,7 @@
                 background: none; 
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                margin: 0;
             }
             .slide { 
                 width: 297mm; 
@@ -76,6 +78,14 @@
                 margin: 0; 
                 box-shadow: none; 
                 border: none; 
+                page-break-after: always;
+                break-after: page;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                overflow: hidden;
+            }
+            .delete-btn, .restore-btn {
+                display: none !important;
             }
         }
 
@@ -236,13 +246,93 @@
         th { color: var(--accent-blue); font-family: var(--font-subheading); }
         .marks { text-align: right; color: var(--accent-purple); font-weight: bold; }
 
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .delete-btn:hover {
+            background-color: rgba(239, 68, 68, 1);
+        }
+
+        .restore-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--accent-blue);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-family: var(--font-title);
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .restore-btn:hover {
+            background-color: #7dd3fc;
+            transform: translateY(-2px);
+        }
+
     </style>
 </head>
 <body>
 
+    <button id="restore-btn" class="restore-btn" onclick="restoreSlide()">↺ Restore Slide</button>
+
     <div id="presentation"></div>
 
     <script>
+        let deletedSlidesStack = [];
+
+        function deleteSlide(btn) {
+            const slide = btn.closest('.slide');
+            const placeholder = document.createElement('div');
+            placeholder.style.display = 'none'; // Hidden anchor to remember position
+            slide.parentNode.insertBefore(placeholder, slide);
+            
+            deletedSlidesStack.push({ slide: slide, placeholder: placeholder });
+            slide.remove();
+            
+            updateRestoreButton();
+        }
+
+        function restoreSlide() {
+            if (deletedSlidesStack.length === 0) return;
+            const lastDeleted = deletedSlidesStack.pop();
+            lastDeleted.placeholder.parentNode.insertBefore(lastDeleted.slide, lastDeleted.placeholder);
+            lastDeleted.placeholder.remove();
+            
+            updateRestoreButton();
+        }
+
+        function updateRestoreButton() {
+            const restoreBtn = document.getElementById('restore-btn');
+            if (deletedSlidesStack.length > 0) {
+                restoreBtn.style.display = 'block';
+                restoreBtn.innerText = '↺ Restore Slide (' + deletedSlidesStack.length + ')';
+            } else {
+                restoreBtn.style.display = 'none';
+            }
+        }
+
         const eventsList = [
             { category: "TECH & ROBOTICS", name: "Codebuster", keyword: "coding" },
             { category: "TECH & ROBOTICS", name: "Line Follower", keyword: "robotics" },
@@ -286,7 +376,7 @@
                     "All participants must report to the technical inspection desk 1 hour prior.",
                     "Dimensions must not exceed 30cm x 30cm x 30cm at the starting position.",
                     "Wireless communication must be secured; interference is the team's responsibility.",
-                    "A maximum of 3-4 members per team is permitted on the operating floor.",
+                    "A maximum of 3 members per team is permitted on the operating floor.",
                     "Bots must be strictly safe; absolutely no projectiles, liquids, or explosives.",
                     "In case of hardware failure, a 2-minute technical timeout may be requested.",
                     "The arena surfaces may vary in friction; design mobility systems accordingly.",
@@ -334,7 +424,7 @@
                     "Performance duration strictly limited to 4-6 minutes.",
                     "Stage dimensions are 40ft x 20ft; plan your choreography accordingly.",
                     "Audio tracks must be submitted to the sound desk 3 hours in advance.",
-                    "Lighting requests must be basic (dim, spot, strobe).",
+                    "Lighting requests must be basic (dim, spot, spot, strobe).",
                     "No dangerous stunts, fire, or glass on stage.",
                     "Costumes must adhere to the school's modesty and decorum policy.",
                     "Microphone checks are strictly limited to 1 minute prior to starting.",
@@ -614,6 +704,7 @@
 
         htmlContent += `
         <section class="slide layout-title">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <h2 style="font-family: var(--font-subheading); color: var(--text-muted); text-transform: uppercase; letter-spacing: 4px; margin-bottom: 0; font-size: clamp(16px, 2.2vw, 24px);">Jusco School South Park Presents</h2>
             <h1 class="slide-title" style="font-size: clamp(50px, 7.5vw, 90px); margin-top: 15px;">ROBONIX 2026</h1>
             <div style="width: 150px; height: 8px; background: var(--accent-blue); margin: 30px auto; border-radius: 5px; box-shadow: 0 0 15px var(--accent-blue);"></div>
@@ -628,6 +719,7 @@
 
         htmlContent += `
         <section class="slide">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <div class="glass-panel" style="justify-content: center; align-items: center; text-align: center;">
                 <h1 class="slide-title" style="font-size: clamp(36px, 5vw, 55px);">About ROBONIX 2026</h1>
                 <div style="width: 120px; height: 6px; background: var(--accent-purple); margin: 25px auto; border-radius: 5px;"></div>
@@ -651,6 +743,7 @@
 
         htmlContent += `
         <section class="slide layout-grid">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <div style="text-align: center; margin-bottom: 10px;">
                 <h1 class="slide-title">Event Categories</h1>
                 <p style="font-size: clamp(15px, 1.8vw, 20px);">Explore the diverse domains of ROBONIX 2026</p>
@@ -696,6 +789,7 @@
 
         htmlContent += `
         <section class="slide">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <div class="glass-panel" style="flex: 1;">
                 <h1 class="slide-title" style="text-align: center; margin-bottom: 30px;">Official Events Roster</h1>
                 <div class="columns">
@@ -730,13 +824,13 @@
             const data = getCategoryData(event.category, event.name);
             const imgs = imageMap[event.keyword];
             
-            // Safe fallback binding
             const img0 = imgs && imgs[0] ? imgs[0] : null;
             const img1 = imgs && imgs[1] ? imgs[1] : null;
             const img2 = imgs && imgs[2] ? imgs[2] : null;
 
             htmlContent += `
             <section class="slide">
+                <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
                 <div class="layout-side">
                     <div class="glass-panel">
                         <span class="badge">${event.category}</span>
@@ -770,6 +864,7 @@
 
             htmlContent += `
             <section class="slide layout-grid">
+                <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
                 <div>
                     <span class="badge">${event.name}</span>
                     <h1 class="slide-title" style="margin-bottom: 5px;">Evaluation & Rules</h1>
@@ -835,6 +930,7 @@
 
         htmlContent += `
         <section class="slide">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <div class="glass-panel" style="flex: 1;">
                 <h1 class="slide-title" style="margin-bottom: 20px;">Global Guidelines & Policies</h1>
                 <div class="columns" style="margin-top: 15px;">
@@ -869,6 +965,7 @@
 
         htmlContent += `
         <section class="slide layout-grid">
+            <button class="delete-btn" onclick="deleteSlide(this)">❌</button>
             <div style="text-align: center; margin-bottom: 10px;">
                 <h1 class="slide-title">Participation & Closing</h1>
             </div>
