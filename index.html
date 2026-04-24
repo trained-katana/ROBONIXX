@@ -282,11 +282,11 @@
         }
         .restore-btn:hover { background-color: #7dd3fc; transform: translateY(-2px); }
 
-        /* --- NEW PRESENTATION UI CSS --- */
+        /* --- PRESENTATION UI CSS --- */
         .toggle-container {
             position: fixed;
             top: 20px;
-            right: 20px; /* Positioned out of the way */
+            right: 20px;
             z-index: 1001;
             background: var(--glass-bg);
             padding: 10px 20px;
@@ -371,24 +371,21 @@
         .nav-btn:hover:not(:disabled) { transform: scale(1.05); background: #7dd3fc; }
         .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* =========================================================
-           ✅ FULLSCREEN / MAXIMIZED PRESENTATION MODE CSS
-           ========================================================= */
+        /* --- MAXIMIZED PRESENTATION MODE CSS --- */
         body.presentation-active {
             overflow: hidden;
             width: 100vw;
             height: 100vh;
             margin: 0;
             padding: 0;
-            display: block; /* Overrides default body layout to allow 100vw slide */
+            display: block; 
             background-color: var(--bg-black);
         }
 
         body.presentation-active .slide {
-            display: none; /* Hide all slides by default */
+            display: none; 
         }
 
-        /* This is the magic that maximizes the slide */
         body.presentation-active .slide.active {
             display: flex;
             width: 100vw !important;
@@ -399,11 +396,10 @@
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            padding: 3vw 3vw 100px 3vw !important; /* Bottom padding ensures content doesn't hit nav buttons */
+            padding: 3vw 3vw 100px 3vw !important; 
             animation: fadeIn 0.4s ease;
         }
 
-        /* Hide the delete buttons during presentation for a clean look */
         body.presentation-active .delete-btn {
             display: none !important;
         }
@@ -411,6 +407,30 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* =========================================================
+           ✅ NEW ADDITIONS: MOBILE OPTIMIZATIONS
+           ========================================================= */
+        @media (max-width: 768px) {
+            /* Scale down UI controls so they don't block content on mobile */
+            .toggle-container {
+                top: 10px;
+                right: 10px;
+                transform: scale(0.85);
+                transform-origin: top right;
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .pres-controls {
+                bottom: 10px;
+                transform: translateX(-50%) scale(0.85);
+                padding: 8px 15px;
+            }
+            /* Adjust padding on mobile landscape so content isn't squashed */
+            body.presentation-active .slide.active {
+                padding: 15px 15px 70px 15px !important; 
+            }
         }
 
     </style>
@@ -481,13 +501,13 @@
             if (isPresentationMode) {
                 document.body.classList.add('presentation-active');
                 controls.style.display = 'flex';
-                syncSlides(); // Ensure correct slide shows up
+                syncSlides();
             } else {
                 document.body.classList.remove('presentation-active');
                 controls.style.display = 'none';
                 const slides = document.querySelectorAll('.slide');
                 slides.forEach(s => {
-                    s.style.display = ''; // Reverts to original flex layout
+                    s.style.display = ''; 
                     s.classList.remove('active');
                 });
             }
@@ -535,35 +555,57 @@
         });
 
         // =========================================================================
-        // ✅ LOGIC: FULLSCREEN API CONTROLS
+        // ✅ NEW LOGIC: FULLSCREEN API WITH MOBILE SCREEN ROTATION LOCK
         // =========================================================================
         function toggleFullscreen() {
             const doc = document.documentElement;
-            if (!document.fullscreenElement) {
-                if (doc.requestFullscreen) {
-                    doc.requestFullscreen();
-                } else if (doc.webkitRequestFullscreen) { /* Safari */
-                    doc.webkitRequestFullscreen();
-                } else if (doc.msRequestFullscreen) { /* IE11 */
-                    doc.msRequestFullscreen();
+            // Support for all standard and older browsers
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+
+            if (!isFullscreen) {
+                let requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
+                if (requestFS) {
+                    let promise = requestFS.call(doc);
+                    // Standard modern browsers return a promise
+                    if (promise !== undefined) {
+                        promise.then(() => {
+                            // Lock orientation to Landscape on Mobile
+                            if (screen.orientation && screen.orientation.lock) {
+                                screen.orientation.lock("landscape").catch(err => console.log("Orientation lock failed:", err));
+                            }
+                        }).catch(err => console.log("Fullscreen failed:", err));
+                    } else {
+                        // Fallback for Safari/older browsers
+                        setTimeout(() => {
+                            if (screen.orientation && screen.orientation.lock) {
+                                screen.orientation.lock("landscape").catch(err => console.log(err));
+                            }
+                        }, 300);
+                    }
                 }
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
+                let exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (exitFS) {
+                    exitFS.call(document);
+                }
+                // Unlock orientation upon exiting fullscreen
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
                 }
             }
         }
 
         // Auto-sync Presentation Mode & Fullscreen state
-        document.addEventListener('fullscreenchange', () => {
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari support
+        document.addEventListener('msfullscreenchange', handleFullscreenChange); // IE11 support
+
+        function handleFullscreenChange() {
             const fsBtn = document.getElementById('fullscreen-btn');
             const modeToggle = document.getElementById('mode-toggle');
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             
-            if (document.fullscreenElement) {
+            if (isFullscreen) {
                 fsBtn.innerText = "EXIT FULLSCREEN";
                 if (!isPresentationMode) {
                     modeToggle.checked = true;
@@ -576,7 +618,7 @@
                     togglePresentationMode();
                 }
             }
-        });
+        }
 
         // REST OF EXISTING DATA
         const eventsList = [
