@@ -42,23 +42,38 @@
             scroll-behavior: smooth;
         }
 
+        /* ✅ RESPONSIVE SCREEN UPGRADE 
+           Slides now use 16:9 cinematic ratio for Smart Boards
+           and fluid widths instead of fixed millimeters.
+        */
+        @media screen {
+            .slide {
+                width: 95vw;
+                max-width: 1600px; /* Scales beautifully on 4K Smart Boards */
+                aspect-ratio: 16 / 9; /* Perfect Smart Board format */
+                height: auto;
+                min-height: 600px;
+                overflow-y: auto; /* Safety fallback for dense content */
+            }
+        }
+
         .slide {
-            width: 297mm; 
-            height: 210mm;
-            overflow: hidden;
+            /* Common styles */
             margin: 0 auto 20px auto;
             position: relative;
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
             background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid), var(--bg-black));
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             border: 1px solid #333;
             display: flex;
             flex-direction: column;
-            padding: 15mm;
+            padding: 3vw; /* Responsive padding */
             transition: opacity 0.3s ease;
+            
+            /* Print Specifics preserved */
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         @page {
@@ -74,15 +89,12 @@
                 margin: 0;
             }
             .slide { 
-                width: 297mm; 
-                height: 210mm;
+                width: 297mm !important; 
+                height: 210mm !important;
+                aspect-ratio: auto !important;
                 margin: 0; 
                 box-shadow: none; 
                 border: none; 
-                page-break-after: always;
-                break-after: page;
-                page-break-inside: avoid;
-                break-inside: avoid;
                 overflow: hidden;
                 display: flex !important;
             }
@@ -396,7 +408,7 @@
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            padding: 3vw 3vw 100px 3vw !important; 
+            padding: 3vw 3vw 100px 3vw !important; /* Space for buttons */
             animation: fadeIn 0.4s ease;
         }
 
@@ -410,10 +422,32 @@
         }
 
         /* =========================================================
-           ✅ NEW ADDITIONS: MOBILE OPTIMIZATIONS
+           ✅ RESPONSIVE STACKING: MOBILE & TABLET (Portrait/Small Screens)
            ========================================================= */
-        @media (max-width: 768px) {
-            /* Scale down UI controls so they don't block content on mobile */
+        @media (max-width: 950px) {
+            .slide {
+                width: 100vw !important;
+                aspect-ratio: auto !important; /* Allow vertical growth */
+                min-height: 100vh !important;
+                border-radius: 0;
+                padding: 5vw !important;
+            }
+            
+            /* Stack Side-by-Side Layouts */
+            .layout-side { flex-direction: column !important; }
+            .layout-side > .glass-panel { width: 100% !important; }
+            
+            /* Stack Multi-Columns */
+            .columns { flex-direction: column !important; gap: 15px !important; }
+            
+            /* Convert 3-Grid Cards to 1 Column */
+            .grid-cards { grid-template-columns: 1fr !important; gap: 15px !important; }
+            
+            /* Ensure Images don't overflow */
+            .image-grid { flex-wrap: wrap; }
+            .image-grid img { width: 100%; min-width: 100%; }
+
+            /* Scale down Top UI so it doesn't block slide content */
             .toggle-container {
                 top: 10px;
                 right: 10px;
@@ -425,11 +459,11 @@
             .pres-controls {
                 bottom: 10px;
                 transform: translateX(-50%) scale(0.85);
-                padding: 8px 15px;
             }
-            /* Adjust padding on mobile landscape so content isn't squashed */
+
+            /* Extra bottom padding in presentation mode so nav doesn't cover text */
             body.presentation-active .slide.active {
-                padding: 15px 15px 70px 15px !important; 
+                padding-bottom: 90px !important;
             }
         }
 
@@ -523,6 +557,8 @@
             slides.forEach((s, idx) => {
                 if (idx === currentSlideIndex) {
                     s.classList.add('active');
+                    // Scroll to top of slide if it is overflowing
+                    s.scrollTop = 0;
                 } else {
                     s.classList.remove('active');
                 }
@@ -555,18 +591,16 @@
         });
 
         // =========================================================================
-        // ✅ NEW LOGIC: FULLSCREEN API WITH MOBILE SCREEN ROTATION LOCK
+        // ✅ FULLSCREEN API WITH MOBILE SCREEN ROTATION LOCK
         // =========================================================================
         function toggleFullscreen() {
             const doc = document.documentElement;
-            // Support for all standard and older browsers
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
 
             if (!isFullscreen) {
                 let requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
                 if (requestFS) {
                     let promise = requestFS.call(doc);
-                    // Standard modern browsers return a promise
                     if (promise !== undefined) {
                         promise.then(() => {
                             // Lock orientation to Landscape on Mobile
@@ -575,7 +609,6 @@
                             }
                         }).catch(err => console.log("Fullscreen failed:", err));
                     } else {
-                        // Fallback for Safari/older browsers
                         setTimeout(() => {
                             if (screen.orientation && screen.orientation.lock) {
                                 screen.orientation.lock("landscape").catch(err => console.log(err));
@@ -588,17 +621,15 @@
                 if (exitFS) {
                     exitFS.call(document);
                 }
-                // Unlock orientation upon exiting fullscreen
                 if (screen.orientation && screen.orientation.unlock) {
                     screen.orientation.unlock();
                 }
             }
         }
 
-        // Auto-sync Presentation Mode & Fullscreen state
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari support
-        document.addEventListener('msfullscreenchange', handleFullscreenChange); // IE11 support
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
 
         function handleFullscreenChange() {
             const fsBtn = document.getElementById('fullscreen-btn');
@@ -620,7 +651,9 @@
             }
         }
 
-        // REST OF EXISTING DATA
+        // =========================================================================
+        // DATA & HTML GENERATION LOGIC 
+        // =========================================================================
         const eventsList = [
             { category: "TECH & ROBOTICS", name: "Codebuster", keyword: "coding" },
             { category: "TECH & ROBOTICS", name: "Line Follower", keyword: "robotics" },
