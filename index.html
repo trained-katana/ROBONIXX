@@ -403,7 +403,9 @@
             border-radius: 0 !important;
             box-shadow: none !important;
             padding: 3vw 3vw 100px 3vw !important; /* Space for buttons */
+            overflow: hidden !important;
             animation: fadeIn 0.4s ease;
+            transform-origin: top left;
         }
 
         body.presentation-active .delete-btn {
@@ -448,6 +450,16 @@
 
             body.presentation-active .slide.active {
                 padding-bottom: 90px !important;
+            }
+        }
+
+        @media (max-width: 950px) and (orientation: landscape) {
+            body.presentation-active .slide.active {
+                padding: 2vh 2vw 72px 2vw !important;
+            }
+
+            .slide {
+                overflow: hidden !important;
             }
         }
     </style>
@@ -528,6 +540,32 @@
 
             document.getElementById('prev-btn').disabled = (currentSlideIndex === 0);
             document.getElementById('next-btn').disabled = (currentSlideIndex === slides.length - 1);
+            fitActiveSlideToViewport();
+        }
+
+        function fitActiveSlideToViewport() {
+            const slide = document.querySelector('.slide.active');
+            if (!slide) return;
+
+            slide.style.transform = '';
+            slide.style.width = '';
+            slide.style.height = '';
+
+            const mobileLandscape = window.matchMedia("(max-width: 950px) and (orientation: landscape)").matches;
+            if (!isPresentationMode || !mobileLandscape) return;
+
+            const controls = document.getElementById('pres-controls');
+            const controlsHeight = controls && controls.style.display !== 'none' ? controls.offsetHeight + 20 : 0;
+            const availableWidth = window.innerWidth;
+            const availableHeight = Math.max(240, window.innerHeight - controlsHeight);
+
+            const contentWidth = Math.max(slide.scrollWidth, availableWidth);
+            const contentHeight = Math.max(slide.scrollHeight, availableHeight);
+            const scale = Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
+
+            slide.style.width = (availableWidth / scale) + "px";
+            slide.style.height = (availableHeight / scale) + "px";
+            slide.style.transform = `scale(${scale})`;
         }
 
         function nextSlide() {
@@ -595,6 +633,7 @@
                 controls.style.display = 'flex';
                 fsBtn.innerText = "EXIT FULLSCREEN";
                 syncSlides();
+                fitActiveSlideToViewport();
             } else {
                 document.body.classList.remove('presentation-active');
                 controls.style.display = 'none';
@@ -603,6 +642,9 @@
                 slides.forEach(s => {
                     s.style.display = ''; 
                     s.classList.remove('active');
+                    s.style.transform = '';
+                    s.style.width = '';
+                    s.style.height = '';
                 });
             }
         }
@@ -646,6 +688,11 @@
             }
         }
 
+        window.addEventListener('resize', fitActiveSlideToViewport);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(fitActiveSlideToViewport, 150);
+        });
+
         // =========================================================================
         // DATA & HTML GENERATION LOGIC
         // =========================================================================
@@ -682,7 +729,7 @@
         ];
 
         function getCategoryData(category, name) {
-            let guidelines, criteria, objective, theme, requirements, allowed, notAllowed, disq, strategy;
+            let guidelines, criteria, objective, theme, requirements, allowed, notAllowed, disq, strategy, proTip;
 
             if (category === "TECH & ROBOTICS") {
                 objective = `To design, build, and deploy an automated or manually controlled system to conquer the ${name} arena.`;
@@ -698,6 +745,7 @@
                 notAllowed = ["Jamming devices", "Flammable materials", "Off-the-shelf kits"];
                 disq = ["Damaging the official arena.", "Touching the bot without permission.", "Using prohibited voltages."];
                 strategy = "Focus on reliability over raw speed. A slow but consistent system beats a fast but unstable one.";
+                proTip = "Prioritize stable execution before attempting aggressive timings.";
             } else if (category === "ESPORTS") {
                 objective = `To demonstrate superior tactical gameplay, reflexes, and team synergy in the competitive ${name} bracket.`;
                 theme = "Cyber-Warfare and Strategic Dominance.";
@@ -712,6 +760,7 @@
                 notAllowed = ["Emulators or PC setups", "Triggers/attachments", "Cheats/Mods/Scripts"];
                 disq = ["Using aimbot or wallhack.", "Account sharing.", "Toxic behavior."];
                 strategy = "Communication is key. Establish a clear shot-caller and stick to the strategy.";
+                proTip = "Callouts every 10-15 seconds prevent chaotic decisions in late circles.";
             } else if (category === "CULTURAL") {
                 objective = `To showcase artistic expression, stage presence, and emotional delivery through the medium of ${name}.`;
                 theme = "Heritage meets Modern Expression.";
@@ -726,6 +775,7 @@
                 notAllowed = ["Liquid cannons", "Offensive language", "Live animals"];
                 disq = ["Exceeding the time limit.", "Violating costume guidelines.", "Damaging stage equipment."];
                 strategy = "Engage with the audience and judges. Eye contact covers up minor mistakes.";
+                proTip = "Rehearse stage entries and exits; transitions often decide close scores.";
             } else if (category === "CREATIVE") {
                 objective = `To translate imagination into tangible art in the ${name} competition.`;
                 theme = "Visions of a Sustainable Future.";
@@ -740,6 +790,7 @@
                 notAllowed = ["Pre-drawn outlines", "Stencils", "Digital manipulation"];
                 disq = ["Bringing pre-finished pieces.", "Interfering with others.", "Plagiarizing."];
                 strategy = "Block out primary shapes in the first 30 minutes. Save the end for detailing.";
+                proTip = "Reserve the final 10% of time only for polish and presentation cleanup.";
             } else {
                 objective = `To outsmart, outplay, and demonstrate elite proficiency in ${name}.`;
                 theme = "Mental Agility and Physical Endurance.";
@@ -754,6 +805,7 @@
                 notAllowed = ["Performance-enhancing substances", "Disruptive noisemakers", "Arguing with officials"];
                 disq = ["Cheating.", "Physical altercation.", "Refusal to follow instructions."];
                 strategy = "Stay calm under pressure. Analyze your opponent's weaknesses early.";
+                proTip = "Control your pace early; disciplined starts produce stronger finishes.";
             }
 
             // --- UNIQUE GUIDELINES ASSIGNMENT ---
@@ -1021,7 +1073,312 @@
                     break;
             }
 
-            return { objective, theme, requirements, guidelines, criteria, allowed, notAllowed, disq, strategy };
+            const eventSpecificData = {
+                "Codebuster": {
+                    objective: "To solve algorithmic and debugging challenges in Codebuster with correct, efficient, and clean code.",
+                    requirements: ["Laptop with required compiler support", "Printed problem statements and rough sheets", "One GitHub account for submission", "Single team login at contest portal"],
+                    criteria: [{ crit: "Problem Accuracy Checkpoints", marks: 45 }, { crit: "Time-to-AC Band", marks: 25 }, { crit: "Code Efficiency Band", marks: 20 }, { crit: "Code Quality & Edge Cases", marks: 10 }],
+                    allowed: ["Official language documentation", "Standard library use", "Local test case notes"],
+                    notAllowed: ["External AI/code assistants", "Copying solutions", "External storage devices"],
+                    disq: ["Submitting plagiarized code.", "Attempting to access blocked websites.", "Tampering with contest systems."],
+                    strategy: "Secure all easy checkpoints first, then allocate focused blocks for medium and hard problems.",
+                    proTip: "Target 100% on first two easiest sets before optimization passes."
+                },
+                "Line Follower": {
+                    objective: "To complete the Line Follower track autonomously with maximum accuracy and minimum time penalties.",
+                    requirements: ["Calibrated IR sensor array", "Fully charged battery pack", "Test wheels and spare motor driver", "Tuned PID values noted on sheet"],
+                    criteria: [{ crit: "Track Checkpoint Accuracy", marks: 40 }, { crit: "Completion Time Band", marks: 30 }, { crit: "Recovery Stability", marks: 20 }, { crit: "Build Safety", marks: 10 }],
+                    allowed: ["Sensor recalibration before run", "Battery replacement between rounds", "Software parameter tuning"],
+                    notAllowed: ["Manual steering inputs", "Physical track markings", "Changing bot hardware mid-run"],
+                    disq: ["Human intervention during active run.", "Damaging track markings.", "Exceeding size limits after inspection."],
+                    strategy: "Tune for smooth corner recovery instead of top speed on straight segments.",
+                    proTip: "Reduce oscillation first; speed gains are useful only with stable tracking."
+                },
+                "Robo War": {
+                    objective: "To disable, immobilize, or outlast opponents in Robo War using robust design and tactical control.",
+                    requirements: ["Verified bot weight certificate", "Failsafe kill-switch integration", "Weapon lock for inspection", "Team safety gloves and toolkit"],
+                    criteria: [{ crit: "Combat Control Checkpoints", marks: 35 }, { crit: "Damage / Domination Band", marks: 35 }, { crit: "Durability Under Hits", marks: 20 }, { crit: "Driver Discipline", marks: 10 }],
+                    allowed: ["Mechanical active weapons", "Armor reinforcement", "Quick pit repairs between rounds"],
+                    notAllowed: ["Liquids, flames, or projectiles", "Signal jammers", "Intentional arena damage"],
+                    disq: ["Unsafe weapon handling in pit zone.", "Ignoring ref stop command.", "Repeated unsportsmanlike ramming after bell."],
+                    strategy: "Attack wheels and control points first; mobility advantage wins most rounds.",
+                    proTip: "Lead with probing pushes in first 20 seconds to read opponent balance."
+                },
+                "Robo Race": {
+                    objective: "To navigate the Robo Race obstacle course with the fastest valid time and clean obstacle completion.",
+                    requirements: ["Race-ready chassis under rule size", "Controller with paired backup channel", "Wheel traction setup for ramps", "Pre-race mechanical inspection pass"],
+                    criteria: [{ crit: "Obstacle Checkpoint Completion", marks: 45 }, { crit: "Race Time Band", marks: 30 }, { crit: "Control Precision", marks: 15 }, { crit: "Finish Integrity", marks: 10 }],
+                    allowed: ["Wired or wireless operation", "Practice on demo lane", "Suspension adjustments"],
+                    notAllowed: ["Skipping mandatory obstacles", "External assistance from sidelines", "Track obstruction tactics"],
+                    disq: ["Three unsafe collisions with barricades.", "Leaving control zone repeatedly.", "Illegal shortcut usage."],
+                    strategy: "Drive a predictable line and preserve momentum through turns instead of hard braking.",
+                    proTip: "Memorize obstacle order; anticipation saves more time than raw acceleration."
+                },
+                "Robo Pick and Place": {
+                    objective: "To accurately pick, transport, and place objects into designated bins within the time window.",
+                    requirements: ["Functional gripper or claw", "Pre-tested arm calibration points", "Object handling code presets", "Team calibration checklist"],
+                    criteria: [{ crit: "Placement Checkpoint Accuracy", marks: 45 }, { crit: "Completion Time Band", marks: 20 }, { crit: "Grip Reliability", marks: 20 }, { crit: "Sorting Logic", marks: 15 }],
+                    allowed: ["Pre-programmed movement sequences", "Color sensor modules", "Servo replacement before run"],
+                    notAllowed: ["Manual object placement", "Damaging blocks", "Repositioning targets by hand"],
+                    disq: ["Human touch during task cycle.", "Dropping objects outside safe zone repeatedly.", "Block damage due to unsafe grip force."],
+                    strategy: "Prioritize high-value placements with low travel distance before risky far targets.",
+                    proTip: "Use conservative grip pressure and faster travel only on straight segments."
+                },
+                "Website Designing": {
+                    objective: "To design a responsive, functional website for the announced theme within the development window.",
+                    requirements: ["Offline-ready asset folder", "Semantic HTML structure plan", "CSS layout wireframe", "JS interaction checklist"],
+                    criteria: [{ crit: "Feature Checkpoint Completion", marks: 35 }, { crit: "Responsive Quality Band", marks: 30 }, { crit: "UI/UX Clarity", marks: 20 }, { crit: "Code Hygiene", marks: 15 }],
+                    allowed: ["Vanilla HTML/CSS/JS", "SVG/icon assets with credits", "Browser devtools for debugging"],
+                    notAllowed: ["External UI frameworks", "Copied templates", "Live internet code imports"],
+                    disq: ["Using uncredited copyrighted assets.", "Submitting broken file structure.", "Plagiarized source blocks."],
+                    strategy: "Finish layout and responsiveness early, then polish interactions and accessibility.",
+                    proTip: "Lock mobile-first structure first, then scale up to desktop."
+                },
+                "Model Making": {
+                    objective: "To create a theme-compliant physical model demonstrating planning, functionality, and presentation clarity.",
+                    requirements: ["Baseboard within size limits", "Material list declaration", "Functional feature plan", "2-minute explanation script"],
+                    criteria: [{ crit: "Theme Checkpoint Alignment", marks: 30 }, { crit: "Structural Build Band", marks: 30 }, { crit: "Working Features", marks: 25 }, { crit: "Presentation Quality", marks: 15 }],
+                    allowed: ["Recycled materials", "Low-voltage lighting", "Movable mechanical parts"],
+                    notAllowed: ["Pre-assembled full model", "Hazardous adhesives/fumes", "Unstable unsupported structures"],
+                    disq: ["Exceeding base dimensions.", "Unsafe wiring exposed to touch.", "False claims about model functions."],
+                    strategy: "Build core structure first, then add one strong functional highlight for extra impact.",
+                    proTip: "A clean, stable model scores better than an overcomplicated fragile one."
+                },
+                "Free Fire": {
+                    objective: "To earn maximum tournament points in Free Fire through placement, eliminations, and discipline.",
+                    requirements: ["Charged mobile device with updates", "Stable game settings profile", "Team role assignment sheet", "Screen recording enabled"],
+                    criteria: [{ crit: "Placement Point Band", marks: 45 }, { crit: "Elimination Checkpoints", marks: 30 }, { crit: "Objective Survival", marks: 15 }, { crit: "Fair Play", marks: 10 }],
+                    allowed: ["Personal earphones", "Touch sensitivity tuning", "In-game communication"],
+                    notAllowed: ["Emulators/tablets", "Macro scripts", "Unauthorized peripherals"],
+                    disq: ["Using exploits or cheats.", "Intentional teaming.", "No proof recording when disputed."],
+                    strategy: "Play for zone priority and controlled engagements instead of random early fights.",
+                    proTip: "Take high-ground positions before third shrink to control rotations."
+                },
+                "BGMI": {
+                    objective: "To maximize BGMI match points across maps using coordinated rotations and disciplined team fights.",
+                    requirements: ["Updated BGMI client", "Role-based drop and loot plan", "Voice comm test before lobby", "Minimum FPS stability"],
+                    criteria: [{ crit: "Placement Band", marks: 40 }, { crit: "Finish Point Checkpoints", marks: 35 }, { crit: "Rotation Decisions", marks: 15 }, { crit: "Rule Compliance", marks: 10 }],
+                    allowed: ["Gyroscope settings", "Official room participation", "Map-marking coordination"],
+                    notAllowed: ["Cross-team collusion", "Third-party overlays", "Device spoofing tools"],
+                    disq: ["Account sharing.", "Lobby sniping by external players.", "Abusive comms to officials."],
+                    strategy: "Secure central compounds after first zone, then rotate early to edge power positions.",
+                    proTip: "Track kill feed for weak squads before choosing push targets."
+                },
+                "Dance": {
+                    objective: "To present a synchronized and expressive dance routine that reflects theme and stage command.",
+                    requirements: ["Final audio track in backup formats", "Team spacing map for stage", "Costume readiness check", "Entry/exit cue plan"],
+                    criteria: [{ crit: "Timing Checkpoints", marks: 30 }, { crit: "Expression & Energy Band", marks: 30 }, { crit: "Formation Precision", marks: 20 }, { crit: "Theme Impact", marks: 20 }],
+                    allowed: ["Theme props", "Mixed dance styles", "Background support performers"],
+                    notAllowed: ["Unsafe stunts without approval", "Inappropriate gestures", "Stage clutter after performance"],
+                    disq: ["Crossing time limit.", "Music with prohibited content.", "Damaging stage equipment."],
+                    strategy: "Keep strongest hook step for the mid and final beat drop to maximize recall.",
+                    proTip: "Practice transition counts more than steps; clean transitions look professional."
+                },
+                "Ramp Walk": {
+                    objective: "To deliver a confident ramp walk aligned to theme, styling, and stage presence standards.",
+                    requirements: ["Theme-compliant attire", "Footwear trial before event", "Pose sequence plan", "Safe prop declaration"],
+                    criteria: [{ crit: "Walk Checkpoint Confidence", marks: 30 }, { crit: "Styling Band", marks: 30 }, { crit: "Posture & Turns", marks: 20 }, { crit: "Audience Connect", marks: 20 }],
+                    allowed: ["Hand props", "Accessories matching theme", "Brief character expression"],
+                    notAllowed: ["Obstructive oversized props", "Unsafe footwear", "Costume changes mid-walk"],
+                    disq: ["Theme mismatch after warning.", "Unsportsmanlike conduct backstage.", "Exceeding allotted stage time."],
+                    strategy: "Maintain pace consistency; sharp pauses at markers improve visual impact.",
+                    proTip: "Use eye focus points at three distances to avoid looking rushed."
+                },
+                "Singing": {
+                    objective: "To perform a musically accurate and expressive live vocal act within time constraints.",
+                    requirements: ["Karaoke/instrumental backup track", "Scale-tested song selection", "Mic distance practice", "Lyric sheet backup"],
+                    criteria: [{ crit: "Pitch Checkpoint Accuracy", marks: 35 }, { crit: "Rhythm Band", marks: 25 }, { crit: "Voice Control", marks: 20 }, { crit: "Expression & Stagecraft", marks: 20 }],
+                    allowed: ["One live instrument", "Language of choice", "Brief intro setup"],
+                    notAllowed: ["Lip-syncing", "Auto-tune processors", "Inappropriate lyrics"],
+                    disq: ["Use of pre-recorded vocals.", "Crossing time cap repeatedly.", "Ignoring stage audio instructions."],
+                    strategy: "Choose a comfortable scale and deliver clean phrasing rather than forcing vocal range.",
+                    proTip: "Mark breathing points in advance to avoid pitch drops on long notes."
+                },
+                "Poetry": {
+                    objective: "To recite original poetry with clarity, emotional depth, and coherent narrative flow.",
+                    requirements: ["Original poem manuscript", "Language declaration", "Time rehearsal under 3 minutes", "Voice projection practice"],
+                    criteria: [{ crit: "Content Checkpoint Originality", marks: 35 }, { crit: "Delivery Band", marks: 30 }, { crit: "Voice Modulation", marks: 20 }, { crit: "Audience Resonance", marks: 15 }],
+                    allowed: ["Paper reference", "English or Hindi performance", "Minimal gesture support"],
+                    notAllowed: ["Copied internet poems", "Offensive content", "Background music overlays"],
+                    disq: ["Plagiarized composition.", "Exceeding time after warning.", "Abusive or hate speech content."],
+                    strategy: "Structure your recitation in clear emotional arcs: opening, build, and final punch line.",
+                    proTip: "Pause briefly after key lines to let judges absorb your message."
+                },
+                "Storytelling": {
+                    objective: "To narrate a compelling story with strong pacing, expression, and audience connection.",
+                    requirements: ["Story outline with beginning-middle-end", "Timing rehearsal for 5 minutes", "Voice modulation plan", "Gesture control practice"],
+                    criteria: [{ crit: "Narrative Checkpoint Clarity", marks: 35 }, { crit: "Pacing Band", marks: 25 }, { crit: "Character Expression", marks: 20 }, { crit: "Audience Engagement", marks: 20 }],
+                    allowed: ["Fictional or real stories", "Bilingual transitions if clear", "Expressive movement"],
+                    notAllowed: ["Props usage", "Inappropriate themes", "Reading full script continuously"],
+                    disq: ["Graphic prohibited content.", "Time overrun beyond grace.", "Disrespectful interaction with audience."],
+                    strategy: "Anchor the story around one memorable central conflict and resolve it decisively.",
+                    proTip: "Use voice contrast between characters to make the narration vivid."
+                },
+                "Beatboxing": {
+                    objective: "To present a clean and original beatbox routine with rhythm control and technical variety.",
+                    requirements: ["Warm-up vocal routine", "Planned pattern sequence", "Mic technique rehearsal", "Breath control preparation"],
+                    criteria: [{ crit: "Technique Checkpoints", marks: 35 }, { crit: "Musicality Band", marks: 30 }, { crit: "Originality", marks: 20 }, { crit: "Stage Command", marks: 15 }],
+                    allowed: ["Dynamic mic cupping", "Original routines", "Battle style transitions"],
+                    notAllowed: ["Loop stations", "Electronic effects", "Pre-recorded accompaniments"],
+                    disq: ["Using external sound processing.", "Exceeding routine time.", "Unsportsmanlike battle behavior."],
+                    strategy: "Open with clarity-first patterns, then escalate complexity once rhythm lock is stable.",
+                    proTip: "Prioritize clean kicks/snares over speed-heavy but muddy combos."
+                },
+                "Skit": {
+                    objective: "To perform a cohesive skit with clear storyline, acting quality, and social message impact.",
+                    requirements: ["Final approved script", "Role and cue sheet", "Minimal movable props", "Dialogue audibility rehearsal"],
+                    criteria: [{ crit: "Script Checkpoint Strength", marks: 30 }, { crit: "Acting Band", marks: 30 }, { crit: "Coordination & Timing", marks: 20 }, { crit: "Message Delivery", marks: 20 }],
+                    allowed: ["Simple props", "Background score", "Ensemble casting"],
+                    notAllowed: ["Political/religious provocation", "Heavy set constructions", "Obscene language"],
+                    disq: ["Crossing performance duration.", "Unsafe prop handling.", "Content violating event policy."],
+                    strategy: "Keep scenes tight and transitions quick to preserve narrative momentum.",
+                    proTip: "Rehearse cue words that trigger next actor entry to avoid dead air."
+                },
+                "Debate": {
+                    objective: "To build evidence-based arguments and rebuttals with clarity, logic, and respectful conduct.",
+                    requirements: ["Verified data references", "Argument outline cards", "Rebuttal prep notes", "Time management plan"],
+                    criteria: [{ crit: "Argument Checkpoint Depth", marks: 35 }, { crit: "Rebuttal Band", marks: 30 }, { crit: "Delivery Clarity", marks: 20 }, { crit: "Decorum", marks: 15 }],
+                    allowed: ["Fact sheets", "Structured notes", "Cross-questioning within rules"],
+                    notAllowed: ["Personal attacks", "Interruptions", "Unverified fabricated statistics"],
+                    disq: ["Abusive statements.", "Ignoring moderator rulings.", "Repeated time violations."],
+                    strategy: "Win on structure: claim, evidence, impact, and concise rebuttal.",
+                    proTip: "Prepare two universal rebuttal frames before the round starts."
+                },
+                "Face Painting": {
+                    objective: "To create a safe, creative face-paint concept with thematic coherence and neat execution.",
+                    requirements: ["Cosmetic-grade paint kit", "Brush and sponge set", "Skin prep essentials", "Design concept sketch"],
+                    criteria: [{ crit: "Design Checkpoint Creativity", marks: 35 }, { crit: "Application Band", marks: 30 }, { crit: "Theme Consistency", marks: 20 }, { crit: "Model Presentation", marks: 15 }],
+                    allowed: ["Glitter accents approved for skin", "Layered color blending", "Non-toxic adhesives"],
+                    notAllowed: ["Industrial paints", "Pre-made sticker masks", "Unsafe skin products"],
+                    disq: ["Using non-cosmetic chemicals.", "Allergy risk negligence.", "Submitting copied design as original."],
+                    strategy: "Block base colors quickly, then spend time on detailing and symmetry checks.",
+                    proTip: "Keep a clean damp cloth to correct edges without smudging the full design."
+                },
+                "Stand Painting": {
+                    objective: "To complete a full stand painting that demonstrates composition, control, and thematic storytelling.",
+                    requirements: ["24x36 canvas setup", "Paint medium with backup supply", "Brush size variety", "Protective floor sheet"],
+                    criteria: [{ crit: "Composition Checkpoint Planning", marks: 30 }, { crit: "Brushwork Band", marks: 30 }, { crit: "Color Harmony", marks: 20 }, { crit: "Theme Interpretation", marks: 20 }],
+                    allowed: ["Acrylic or oil paints", "Reference mood board", "Texture techniques"],
+                    notAllowed: ["Pre-drawn full artwork", "Digital projection tracing", "Chemical spray hazards"],
+                    disq: ["Theme mismatch.", "Submitting unfinished blank major areas.", "Interfering with neighboring participants."],
+                    strategy: "Start with a strong focal point and build supporting elements around it.",
+                    proTip: "Reserve highlights for the final pass to increase visual depth."
+                },
+                "Pot Painting": {
+                    objective: "To transform the provided pot into a complete artistic piece with neat coverage and originality.",
+                    requirements: ["Organizer-issued pot", "Primer/base coat supplies", "Fine detail brushes", "Sealing coat plan"],
+                    criteria: [{ crit: "Coverage Checkpoint Quality", marks: 30 }, { crit: "Pattern Band Creativity", marks: 30 }, { crit: "Detailing Precision", marks: 20 }, { crit: "Overall Finish", marks: 20 }],
+                    allowed: ["3D decorative elements", "Mixed paint mediums", "Handmade motifs"],
+                    notAllowed: ["Half-covered surfaces", "Pre-painted pots", "Copied traced templates"],
+                    disq: ["Using pre-finished base artwork.", "Fragile attachments likely to fall.", "Excessively wet unsafe finish."],
+                    strategy: "Apply an even base first and build layered motifs for a professional look.",
+                    proTip: "Dry each layer properly; rushed layering causes muddy colors."
+                },
+                "Stone Painting": {
+                    objective: "To craft a polished stone artwork that uses shape, texture, and detail effectively.",
+                    requirements: ["Assigned stone set", "Acrylic and liner pens", "Micro-detail tools", "Protective sealant"],
+                    criteria: [{ crit: "Concept Checkpoint Originality", marks: 35 }, { crit: "Detail Band Precision", marks: 30 }, { crit: "Use of Stone Form", marks: 20 }, { crit: "Final Finish", marks: 15 }],
+                    allowed: ["Dot art tools", "Fine liners", "Gloss or matte sealing"],
+                    notAllowed: ["Stickers replacing hand painting", "Printed decals as main design", "Unsealed fragile paint layers"],
+                    disq: ["Copied design from another participant.", "Unsafe chemical handling.", "Incomplete mandatory surface work."],
+                    strategy: "Let the natural stone contour drive the composition for higher originality.",
+                    proTip: "Sketch with light marker dots before committing with paint."
+                },
+                "Cooking": {
+                    objective: "To prepare and plate a flavorful dish under no-open-flame constraints while maintaining hygiene.",
+                    requirements: ["Ingredient prep boxes", "Portable induction-safe cookware", "Sanitized workstation kit", "Plating concept plan"],
+                    criteria: [{ crit: "Taste Checkpoint Balance", marks: 35 }, { crit: "Technique Band", marks: 25 }, { crit: "Plating Aesthetics", marks: 20 }, { crit: "Hygiene & Workflow", marks: 20 }],
+                    allowed: ["Induction cooking", "Microwave finishing", "Pre-washed raw ingredients"],
+                    notAllowed: ["Open flame appliances", "Ready-made full dishes", "Unsafe food storage"],
+                    disq: ["Food contamination incidents.", "Use of banned heating source.", "Serving undercooked unsafe items."],
+                    strategy: "Plan parallel prep and cooking tracks to avoid last-minute plating panic.",
+                    proTip: "Taste in small intervals; seasoning corrections are easiest early."
+                },
+                "Videography": {
+                    objective: "To produce a coherent short video from same-day campus footage with clean storytelling and edits.",
+                    requirements: ["Shot list and storyboard", "Stabilized recording setup", "Editing device with export support", "Copyright-free audio list"],
+                    criteria: [{ crit: "Narrative Checkpoint Coherence", marks: 35 }, { crit: "Shot Quality Band", marks: 25 }, { crit: "Editing & Transitions", marks: 25 }, { crit: "Theme Relevance", marks: 15 }],
+                    allowed: ["Mobile or DSLR capture", "Color correction", "Royalty-free music with credit"],
+                    notAllowed: ["External pre-shot footage", "Uncredited copyrighted audio", "AI-generated replacement clips"],
+                    disq: ["Submitting non-event footage.", "Missing mandated output format.", "Copyright violation in final cut."],
+                    strategy: "Capture extra B-roll early; editing becomes easier with transition coverage.",
+                    proTip: "Lock sequence first, then add effects; story beats matter more than filters."
+                },
+                "Photography": {
+                    objective: "To capture theme-aligned photographs with technical quality and compelling composition.",
+                    requirements: ["Camera/phone with manual controls", "RAW+JPEG capture enabled", "Theme interpretation notes", "Top-3 shortlist process"],
+                    criteria: [{ crit: "Theme Checkpoint Relevance", marks: 30 }, { crit: "Composition Band", marks: 30 }, { crit: "Technical Exposure", marks: 25 }, { crit: "Selection Rationale", marks: 15 }],
+                    allowed: ["Basic color correction", "Cropping", "Lens changes"],
+                    notAllowed: ["Object addition/removal edits", "Stock photo usage", "Heavy manipulation composites"],
+                    disq: ["Submitting non-original images.", "Metadata tampering.", "Violation of editing limits."],
+                    strategy: "Shoot wide, medium, and detail frames before selecting your best narrative trio.",
+                    proTip: "Bracket key shots to secure at least one strong exposure."
+                },
+                "Quiz": {
+                    objective: "To score highest through speed, accuracy, and strategic risk management across quiz rounds.",
+                    requirements: ["Two-member coordinated team", "Writing tools for prelims", "Round format familiarity", "Silent communication cues"],
+                    criteria: [{ crit: "Answer Checkpoint Accuracy", marks: 50 }, { crit: "Buzzer Response Band", marks: 20 }, { crit: "Round Consistency", marks: 20 }, { crit: "Rule Discipline", marks: 10 }],
+                    allowed: ["Team discussion in allowed windows", "Use of rough sheets", "Clarification request to quizmaster"],
+                    notAllowed: ["Phones/smartwatches", "Audience prompting", "Talking during opponents' turns"],
+                    disq: ["Using electronic assistance.", "Repeated rule violations.", "Disruptive behavior during stage round."],
+                    strategy: "Avoid reckless buzzer attempts early; protect score before high-risk rounds.",
+                    proTip: "Assign one teammate for buzz timing and one for final confirmation."
+                },
+                "Sudoku": {
+                    objective: "To complete multi-level Sudoku puzzles correctly within the allotted time limit.",
+                    requirements: ["Pencil and eraser", "Clean logical marking method", "Time split per puzzle", "Verification pass routine"],
+                    criteria: [{ crit: "Solved Grid Checkpoints", marks: 55 }, { crit: "Completion Time Band", marks: 25 }, { crit: "Error-Free Accuracy", marks: 15 }, { crit: "Method Discipline", marks: 5 }],
+                    allowed: ["Candidate notes in boxes", "Eraser corrections", "Sequential difficulty approach"],
+                    notAllowed: ["Calculators/apps", "Peer discussion", "Puzzle sheet exchange"],
+                    disq: ["Copying neighbors.", "Leaving with puzzle sheet.", "Using digital solver tools."],
+                    strategy: "Finish guaranteed singles first, then resolve constrained rows and boxes systematically.",
+                    proTip: "Do a fast final scan for duplicate digits before submission."
+                },
+                "Chess": {
+                    objective: "To win games under rapid time control using sound opening prep, tactics, and endgame discipline.",
+                    requirements: ["Valid player registration", "Scoresheet handling knowledge", "Clock operation familiarity", "Opening repertoire plan"],
+                    criteria: [{ crit: "Result Checkpoint Score", marks: 55 }, { crit: "Tactical Conversion Band", marks: 20 }, { crit: "Time Management", marks: 15 }, { crit: "Protocol Compliance", marks: 10 }],
+                    allowed: ["Notation as per rules", "Pre-game board check", "Arbiter clarification requests"],
+                    notAllowed: ["External analysis tools", "Advice from spectators", "Touch-move violations"],
+                    disq: ["Illegal move after warning cycle.", "Unsporting conduct at board.", "Use of electronic devices."],
+                    strategy: "Play practical lines that preserve time and avoid unnecessary tactical chaos.",
+                    proTip: "Use opponent's clock to plan two candidate moves ahead."
+                },
+                "Cricket": {
+                    objective: "To outscore opponents in the 6-over format through disciplined batting, bowling, and fielding plans.",
+                    requirements: ["Confirmed playing XI list", "Toss-time strategy", "Batting order chart", "Role-specific field setup"],
+                    criteria: [{ crit: "Run / Wicket Checkpoints", marks: 45 }, { crit: "Over-by-Over Control Band", marks: 25 }, { crit: "Fielding Efficiency", marks: 20 }, { crit: "Rule Adherence", marks: 10 }],
+                    allowed: ["Standard tennis ball gear", "Captain-led field changes", "Warm-up drills"],
+                    notAllowed: ["Ball tampering", "Excessive appealing abuse", "Arguing with umpires"],
+                    disq: ["Persistent dissent.", "Illegal bowling action after warnings.", "Dangerous play conduct."],
+                    strategy: "Target one high-scoring over and protect wickets for the death overs.",
+                    proTip: "Set a clear plan for each over before the bowler starts run-up."
+                },
+                "Football": {
+                    objective: "To win 5-a-side matches through controlled possession, quick transitions, and defensive discipline.",
+                    requirements: ["Shin guards and legal footwear", "Fixed role assignments", "Set-piece routine plan", "Substitution communication"],
+                    criteria: [{ crit: "Goal/Defense Checkpoints", marks: 45 }, { crit: "Team Shape Band", marks: 25 }, { crit: "Passing & Transition", marks: 20 }, { crit: "Sportsmanship", marks: 10 }],
+                    allowed: ["Rolling substitutions", "Structured pressing", "Short-corner routines"],
+                    notAllowed: ["Slide tackles", "Metal studs", "Verbal abuse on field"],
+                    disq: ["Red-card offense.", "Repeated dangerous play.", "Ignoring referee directives."],
+                    strategy: "Keep compact shape and force opponents wide before triggering counter-attacks.",
+                    proTip: "Rotate fresh legs every few minutes to maintain pressing intensity."
+                }
+            };
+
+            if (eventSpecificData[name]) {
+                const specific = eventSpecificData[name];
+                objective = specific.objective;
+                requirements = specific.requirements;
+                criteria = specific.criteria;
+                allowed = specific.allowed;
+                notAllowed = specific.notAllowed;
+                disq = specific.disq;
+                strategy = specific.strategy;
+                proTip = specific.proTip;
+            }
+
+            return { objective, theme, requirements, guidelines, criteria, allowed, notAllowed, disq, strategy, proTip };
         }
 
         const urlParams = "?auto=format&fit=crop&w=800&q=80";
@@ -1453,7 +1810,7 @@
                             </p>
                             <div style="margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
                                 <p style="font-weight: bold; color: var(--accent-purple); margin-bottom: 4px;">Pro Tip:</p>
-                                <p>Review the Judging Criteria meticulously. Optimize your performance to score max points in highest weighted categories.</p>
+                                <p>${data.proTip}</p>
                             </div>
                         </div>
                     </div>
