@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ROBONIX 2026 - Jusco School South Park</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Open+Sans:wght@400;600&family=Poppins:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -40,6 +40,7 @@
             color: var(--text-light);
             font-family: var(--font-body);
             scroll-behavior: smooth;
+            overflow-x: hidden;
         }
 
         @media screen {
@@ -403,9 +404,7 @@
             border-radius: 0 !important;
             box-shadow: none !important;
             padding: 3vw 3vw 100px 3vw !important; /* Space for buttons */
-            overflow: hidden !important;
             animation: fadeIn 0.4s ease;
-            transform-origin: top left;
         }
 
         body.presentation-active .delete-btn {
@@ -417,8 +416,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- RESPONSIVE STACKING: MOBILE & TABLET --- */
-        @media (max-width: 950px) {
+        /* --- RESPONSIVE STACKING: MOBILE PORTRAIT ONLY --- */
+        @media (max-width: 950px) and (orientation: portrait) {
             .slide {
                 width: 100vw !important;
                 aspect-ratio: auto !important; 
@@ -453,14 +452,48 @@
             }
         }
 
-        @media (max-width: 950px) and (orientation: landscape) {
+        /* --- RESPONSIVE SCALING: MOBILE & TABLET LANDSCAPE --- */
+        @media (max-width: 950px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) {
+            .slide {
+                width: 100vw !important;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                aspect-ratio: auto !important;
+                padding: 10px !important;
+                overflow: hidden !important; /* STRICT NO SCROLLING */
+                justify-content: space-evenly;
+            }
+            
             body.presentation-active .slide.active {
-                padding: 2vh 2vw 72px 2vw !important;
+                padding-bottom: 45px !important; /* Smaller space for pres controls */
             }
 
-            .slide {
-                overflow: hidden !important;
+            :root {
+                --size-title: clamp(14px, 4.5vh, 22px);
+                --size-heading: clamp(12px, 4vh, 18px);
+                --size-subheading: clamp(11px, 3.5vh, 15px);
+                --size-body: clamp(9px, 2.5vh, 12px);
+                --padding: 8px;
             }
+            
+            .layout-side { flex-direction: row !important; gap: 10px !important; }
+            .columns { flex-direction: row !important; gap: 10px !important; }
+            .grid-cards { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
+            
+            .image-grid { min-height: 0 !important; gap: 8px !important; padding-top: 5px !important; flex: 0 1 auto; }
+            .image-grid img { max-height: 18vh !important; }
+            
+            ul { margin-left: 15px !important; margin-bottom: 4px !important; }
+            h1, h2, h3 { margin-bottom: 4px !important; line-height: 1.1 !important; }
+            p, li, span, td { margin-bottom: 2px !important; line-height: 1.2 !important; }
+            
+            .badge { padding: 2px 6px !important; font-size: 9px !important; margin-bottom: 4px !important;}
+            table { margin-top: 2px !important; }
+            th, td { padding: 2px 4px !important; }
+            .glass-panel { padding: 8px !important; border-radius: 8px !important; }
+
+            .pres-controls { transform: translateX(-50%) scale(0.6); bottom: 2px; padding: 5px 15px;}
+            .toggle-container { transform: scale(0.6); transform-origin: top right; top: 5px; right: 5px; padding: 5px 10px;}
         }
     </style>
 </head>
@@ -563,10 +596,6 @@
             if (e.key === "ArrowLeft") prevSlide();
         });
 
-        // =========================================================================
-        // ✅ NEW: UNIFIED YOUTUBE-STYLE FULLSCREEN & ORIENTATION LOCK LOGIC
-        // =========================================================================
-        
         function requestFSAndLock() {
             const doc = document.documentElement;
             let requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
@@ -641,7 +670,6 @@
             updatePresentationUI(isPresentationMode);
         }
 
-        // Sync UI if user exits fullscreen via browser (like hitting ESC)
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         document.addEventListener('msfullscreenchange', handleFullscreenChange);
@@ -658,9 +686,6 @@
             }
         }
 
-        // =========================================================================
-        // DATA & HTML GENERATION LOGIC
-        // =========================================================================
         const eventsList = [
             { category: "TECH & ROBOTICS", name: "Codebuster", keyword: "coding" },
             { category: "TECH & ROBOTICS", name: "Line Follower", keyword: "robotics" },
@@ -693,347 +718,402 @@
             { category: "SPORTS", name: "Football", keyword: "football-stadium" }
         ];
 
+        // --- UNIQUE EVENT DATA MAP ---
+        const eventDataMap = {
+            "Codebuster": {
+                objective: "Construct highly optimized algorithms resolving complex logical constraints within a strict timeline.",
+                theme: "Algorithmic Efficiency & Syntax Superiority.",
+                requirements: ["Pre-configured laptop with offline IDE", "Active local server setup", "Screen recording active"],
+                checkpoints: ["Band A: Basic functionality (0-20 mins)", "Band B: Time & space optimization (20-40 mins)", "Band C: Edge case handling (40-60 mins)"],
+                guidelines: ["Code must compile flawlessly on the very first execution attempt.", "Standard library functions only; no external packages.", "Avoid deeply nested loops; strict execution timeouts apply."],
+                criteria: [{crit: "Time Complexity", marks: 35}, {crit: "Memory Usage", marks: 25}, {crit: "Code Readability", marks: 20}, {crit: "Edge Cases Passed", marks: 20}],
+                allowed: ["Mechanical keyboards", "Blank physical scratchpads", "Wired mice"],
+                notAllowed: ["AI auto-complete (Copilot)", "External USB drives", "Internet browsing"],
+                disq: ["Plagiarism from adjacent screens.", "Tampering with system clocks to bypass constraints.", "Malicious code injections."],
+                strategy: "Outline your logic on the scratchpad using pseudocode before typing any actual syntax.",
+                proTip: "A slightly messy but functioning O(N) solution will easily outscore a perfectly formatted O(N²) brute-force script."
+            },
+            "Line Follower": {
+                objective: "Engineer an autonomous bot capable of tracing an intricate, high-contrast path with maximum speed and zero deviations.",
+                theme: "Precision Sensory Arrays & Responsive Motor Control.",
+                requirements: ["Bot chassis strictly under 20x20 cm", "IR or PID sensor arrays", "Replaceable battery packs"],
+                checkpoints: ["Setup: Sensor calibration phase", "Run 1: Mapping the track's curves", "Run 2: High-speed optimized sprint"],
+                guidelines: ["The bot must independently correct itself if a wheel breaches the line boundary.", "PID tuning is allowed between rounds but restricted to 2 minutes.", "Tracks feature acute 90-degree turns and intersection cross-overs."],
+                criteria: [{crit: "Completion Time", marks: 40}, {crit: "Path Adherence", marks: 30}, {crit: "Sensor Calibration", marks: 20}, {crit: "Build Quality", marks: 10}],
+                allowed: ["Extra sensor modules", "Soldering irons (in pit area)", "Laptop for PID tuning"],
+                notAllowed: ["Bluetooth overrides", "Tacky tire compounds", "Pre-programmed track maps"],
+                disq: ["Touching the bot during an active timed run.", "Leaving the track limits with all 4 wheels.", "Damaging the vinyl track surface."],
+                strategy: "Sacrifice raw straight-line speed for superior cornering grip and faster sensor polling rates.",
+                proTip: "Clean your tires with rubbing alcohol right before the run. Dust buildup is the #1 cause of sensor overshoot."
+            },
+            "Robo War": {
+                objective: "Design a remote-controlled combat chassis to immobilize, dismantle, or ring-out opposing bots in the combat arena.",
+                theme: "Destructive Engineering & Kinetic Energy.",
+                requirements: ["Weight under 15kg (verified at weigh-in)", "Failsafe power switch externally visible", "2.4GHz transmitters only"],
+                checkpoints: ["Scrutineering: Safety & weight checks", "Qualifiers: 3-minute survival bouts", "Finals: Sudden death elimination"],
+                guidelines: ["Weapons must spin down completely within 60 seconds of power cut.", "Immobilization is declared if translational movement ceases for 10 seconds.", "Arena hazards (flippers, spikes) will activate in the final 60 seconds of a match."],
+                criteria: [{crit: "Damage Dealt", marks: 40}, {crit: "Aggression", marks: 30}, {crit: "Control & Driving", marks: 20}, {crit: "Survivability", marks: 10}],
+                allowed: ["Pneumatic flippers", "Hardened steel spinners", "Spare armor plates"],
+                notAllowed: ["Flamethrowers/Liquids", "Radio jammers", "Untethered projectiles"],
+                disq: ["Failing the pre-match failsafe test.", "Intentionally attacking the arena safety glass.", "Engaging before the buzzer."],
+                strategy: "Build low to the ground. Winning the 'ground clearance game' dictates who flips whom.",
+                proTip: "Don't over-engineer the weapon at the cost of drive motors. A reliable wedge bot often beats a fragile spinner."
+            },
+            "Robo Race": {
+                objective: "Navigate a custom-built RC vehicle through a treacherous obstacle course demanding torque, clearance, and driver skill.",
+                theme: "Suspension Geometry & Throttle Control.",
+                requirements: ["Minimum ground clearance of 2 inches", "Rubberized off-road tires", "Wired or wireless control system"],
+                checkpoints: ["Sector 1: Speed ramp clearing", "Sector 2: Sandpit navigation", "Sector 3: Precision tightrope"],
+                guidelines: ["Wired bots must have slack cables managed exclusively by the co-pilot.", "Reversing to correct a mistake adds a 5-second penalty.", "Hitting a track boundary marker adds 10 seconds per incident."],
+                criteria: [{crit: "Course Completion Time", marks: 50}, {crit: "Obstacle Clearance Rate", marks: 25}, {crit: "Chassis Stability", marks: 15}, {crit: "Driving Penalties (Negative)", marks: 10}],
+                allowed: ["4WD systems", "Quick-swap batteries", "Suspension adjustments mid-race"],
+                notAllowed: ["Tracked (tank) propulsion", "Pre-bought commercial RC cars", "Sharp chassis edges"],
+                disq: ["Pulling the bot via the wired controller cable.", "Skipping a mandated obstacle entirely.", "Interfering with the opponent's lane."],
+                strategy: "Momentum is everything in the sandpit, but slow, deliberate crawling is required on the tightrope.",
+                proTip: "Practice left-right steering inversion. When the bot drives towards you, amateur drivers panic and turn the wrong way."
+            },
+            "Robo Pick and Place": {
+                objective: "Command a robotic manipulator arm to identify, grip, transport, and accurately stack geometric objects.",
+                theme: "Kinematics & Delicate Manipulation.",
+                requirements: ["Minimum 3 degrees of freedom (DOF)", "Custom gripper mechanism", "Onboard micro-controller"],
+                checkpoints: ["Phase 1: Basic block retrieval", "Phase 2: Color-sorting targets", "Phase 3: Unstable pyramid stacking"],
+                guidelines: ["Dropping an object in transit results in zero points for that specific block.", "Crushing or damaging a delicate target (e.g., a hollow sphere) yields negative points.", "Fully autonomous runs apply a 1.5x score multiplier over manual joystick control."],
+                criteria: [{crit: "Stacking Accuracy", marks: 40}, {crit: "Objects Transported", marks: 30}, {crit: "Arm Fluidity/Jitter", marks: 20}, {crit: "Autonomy Bonus", marks: 10}],
+                allowed: ["Servo or Stepper motors", "Suction or Claw grippers", "Camera modules (for CV)"],
+                notAllowed: ["Adhesives on the gripper", "Pre-stacking objects by hand", "Exceeding 12V supply"],
+                disq: ["Knocking over the target base platform.", "Using hands to steady the robot base.", "Short-circuiting the arena power."],
+                strategy: "Design a wide, flat gripper surface with foam padding to maximize friction and prevent object slippage.",
+                proTip: "Code a 'home position' macro. Resetting smoothly after a drop saves crucial seconds compared to manual realignment."
+            },
+            "Website Designing": {
+                objective: "Develop a fully responsive, aesthetically engaging, and structurally sound frontend interface from scratch.",
+                theme: "Modern UI/UX & Responsive Architectures.",
+                requirements: ["Folder structure prepared (HTML/CSS/JS)", "Royalty-free asset zip file", "Local web browser"],
+                checkpoints: ["Hour 1: Wireframing & Semantic HTML", "Hour 2: CSS Styling & Flex/Grid", "Hour 3: JS Interactivity & Polish"],
+                guidelines: ["Frameworks like Bootstrap or Tailwind are strictly prohibited; vanilla CSS only.", "The layout must explicitly adapt to 3 viewport sizes: Mobile, Tablet, and Desktop.", "Accessibility (ARIA labels, alt text, contrast) will be heavily scrutinized."],
+                criteria: [{crit: "Responsive Scaling", marks: 35}, {crit: "Visual Aesthetics", marks: 30}, {crit: "Code Cleanliness", marks: 20}, {crit: "Interactive Elements", marks: 15}],
+                allowed: ["Pre-downloaded Google Fonts", "Color palette hex codes", "CSS Reset boilerplates"],
+                notAllowed: ["External CSS frameworks", "Pre-built website templates", "Connecting to live APIs"],
+                disq: ["Submitting code written prior to the event.", "Using website builders like Wix/WordPress.", "Stealing live code via inspector tools."],
+                strategy: "Build 'mobile-first'. It is significantly easier to expand a mobile layout to desktop than to compress a massive desktop site.",
+                proTip: "Judges love subtle CSS animations. Add hover states to buttons and smooth transitions to score easy UI points."
+            },
+            "Model Making": {
+                objective: "Construct a highly detailed, scaled physical diorama showcasing futuristic urban planning and green engineering.",
+                theme: "Smart Cities & Sustainable Living.",
+                requirements: ["Baseboard max 1x1 meter", "Recycled structural materials", "Accompanying blueprint draft"],
+                checkpoints: ["Band 1: Topography & Foundations", "Band 2: Architectural Structures", "Band 3: Functional detailing (Lights/Motors)"],
+                guidelines: ["All primary structures must be assembled on-site; pre-fabs are heavily penalized.", "Incorporate at least one working kinetic or electronic element (e.g., wind turbine).", "The 2-minute verbal pitch is mandatory to explain the city's resource management loop."],
+                criteria: [{crit: "Conceptual Innovation", marks: 35}, {crit: "Craftsmanship/Detailing", marks: 30}, {crit: "Use of Recycled Goods", marks: 20}, {crit: "Pitch Delivery", marks: 15}],
+                allowed: ["LED light strips", "Cardboard, balsa wood, clay", "Miniature figurines"],
+                notAllowed: ["Lego bricks or pre-cast molds", "Toxic adhesives or paints", "Oversized baseboards"],
+                disq: ["Transporting a fully completed model.", "Exceeding the dimensions causing arena blockage.", "Failing to present the verbal pitch."],
+                strategy: "Focus heavily on the 'why' during your pitch. A mediocre model with brilliant logic beats a pretty but pointless diorama.",
+                proTip: "Hide your battery packs cleanly beneath the baseboard. Exposed wires ruin the illusion of a smart city."
+            },
+            "Free Fire": {
+                objective: "Survive, strategize, and eliminate opposing squads in a high-stakes mobile battle royale format.",
+                theme: "Tactical Rotations & Reflex Supremacy.",
+                requirements: ["Fully charged mobile device", "Stable cellular data (no Wi-Fi provided)", "In-game mic enabled"],
+                checkpoints: ["Map 1: Bermuda (Aggression test)", "Map 2: Purgatory (Rotation test)", "Map 3: Kalahari (Elevation test)"],
+                guidelines: ["Using any third-party crosshair overlays or gfx tools is an instant ban.", "Teams must drop simultaneously when the custom room host signals.", "Dead players cannot communicate with surviving teammates after 10 seconds of death."],
+                criteria: [{crit: "Placement Points", marks: 50}, {crit: "Kill Points", marks: 40}, {crit: "Team Revives", marks: 10}, {crit: "Fair Play", marks: 0}],
+                allowed: ["Finger sleeves", "Wired earphones", "Matte screen protectors"],
+                notAllowed: ["iPads or Tablets", "Hardware triggers", "Emulator bypasses"],
+                disq: ["Teaming up with another squad.", "Using map glitch spots to hide.", "Profanity in all-chat."],
+                strategy: "Secure center-zone compounds early. Let the edge-riders fight each other, then clean up the weakened victors.",
+                proTip: "Designate a dedicated 'Support/Sniper' who carries extra gloo walls and focuses strictly on overwatch while the fraggers push."
+            },
+            "BGMI": {
+                objective: "Demonstrate elite gunplay, zone prediction, and coordinated squad assaults in Erangel and Miramar.",
+                theme: "Strategic Warfare & Resource Management.",
+                requirements: ["Pre-installed map packs", "Screen recording enabled at 30fps", "Device cooling solution"],
+                checkpoints: ["Early Game: Uncontested looting", "Mid Game: Vehicle rotations", "Late Game: Circle 5 positional holds"],
+                guidelines: ["Point distribution: 15 pts for WWCD, 1 pt per finish.", "All players must submit POV recordings if a dispute is filed.", "Lobby restarts only occur if more than 10 players disconnect before the first plane jump."],
+                criteria: [{crit: "Total Finishes", marks: 45}, {crit: "Match Placement", marks: 40}, {crit: "Utility Usage (Nades)", marks: 10}, {crit: "Survival Time", marks: 5}],
+                allowed: ["External cooling fans", "Gyroscope gameplay", "In-game voice comms"],
+                notAllowed: ["Account sharing (Ringers)", "Config files/Scripts", "Spectator coaching"],
+                disq: ["Using aim-assist mods.", "Refusing to provide POV footage.", "Toxic behavior towards admins."],
+                strategy: "Always secure a hard-cover vehicle (like a UAZ) per two players. Vehicles are your only cover in late-game open circles.",
+                proTip: "Pre-cook your frag grenades. An air-burst grenade gives the enemy zero time to react and breaks defensive stalemates instantly."
+            },
+            "Dance": {
+                objective: "Deliver a synchronized, emotionally resonant, and technically complex choreographic routine.",
+                theme: "Rhythmic Storytelling & Stage Dominance.",
+                requirements: ["Audio track provided on an empty USB", "Costumes vetted prior to event", "Choreography mapping submitted"],
+                checkpoints: ["Intro: Stage entry and formation", "Climax: Peak energy/stunts", "Outro: Final pose and exit"],
+                guidelines: ["Routines must span between 3 and 5 minutes. Music fades immediately at 5:01.", "Acrobatic flips must have a spotter or be pre-approved for safety.", "Lip-syncing to the track is encouraged if it adds to the emotional narrative."],
+                criteria: [{crit: "Synchronization", marks: 35}, {crit: "Choreography Complexity", marks: 25}, {crit: "Facial Expressions", marks: 25}, {crit: "Costume/Props", marks: 15}],
+                allowed: ["Background props", "Formation changes", "Theatrical makeup"],
+                notAllowed: ["Fire or pyrotechnics", "Scattering glitter/liquids on stage", "Obscene gestures"],
+                disq: ["Track exceeding the time limit.", "Costume malfunction due to negligence.", "Disrespecting other performing troupes."],
+                strategy: "Utilize the entire depth of the stage. Constant formation changes keep the judges visually engaged.",
+                proTip: "If a dancer forgets a step, smile and keep the energy high. Judges dock fewer points for confidence than for visible panic."
+            },
+            "Ramp Walk": {
+                objective: "Command the runway with impeccable posture, thematic styling, and undeniable charisma.",
+                theme: "Avant-Garde Fashion & Confident Strides.",
+                requirements: ["Thematic attire matching the brief", "Appropriate footwear for stage", "Brief description of the outfit"],
+                checkpoints: ["The Entry: Establishing presence", "The Walk: Pacing and posture", "The Pose: 3-second focal hold"],
+                guidelines: ["Participants must complete the T-walk, pause at the apex for 3 seconds, and return.", "Eye contact must be maintained with the audience and camera, not the floor.", "Background tracks will be standardized house/ambient beats provided by the DJ."],
+                criteria: [{crit: "Confidence & Demeanor", marks: 40}, {crit: "Thematic Attire", marks: 30}, {crit: "Walk Posture & Rhythm", marks: 20}, {crit: "The Pose", marks: 10}],
+                allowed: ["Statement accessories", "Dramatic capes/trains", "Stylized hair/makeup"],
+                notAllowed: ["Changing outfits mid-walk", "Pets on the runway", "Removing footwear on stage"],
+                disq: ["Tripping intentionally for comedic effect.", "Inappropriate or revealing attire.", "Exceeding the 1-minute walk time."],
+                strategy: "Pace your steps to the bassline of the music. A slower, deliberate walk projects immense power.",
+                proTip: "Plant your back foot firmly during your apex pose. It creates a sharper body angle and prevents wobbling."
+            },
+            "Singing": {
+                objective: "Captivate the audience with flawless pitch, vocal range, and profound emotional delivery.",
+                theme: "Melodic Resonance & Vocal Control.",
+                requirements: ["Karaoke track on a clean drive (no lead vocals)", "Instrument cable if playing live", "Lyrics memorized"],
+                checkpoints: ["Verse 1: Establishing tone", "Chorus/Bridge: Showcasing range", "Outro: Vocal control/fade"],
+                guidelines: ["Performances are capped at 4 minutes, including stage setup.", "Microphone technique (pulling away for high notes) is monitored by judges.", "Medleys are allowed but must transition seamlessly without jarring cuts."],
+                criteria: [{crit: "Pitch & Intonation", marks: 40}, {crit: "Voice Quality/Texture", marks: 25}, {crit: "Rhythm & Tempo", marks: 20}, {crit: "Stage Presence", marks: 15}],
+                allowed: ["One acoustic instrument", "Acapella segments", "Water bottle on stage"],
+                notAllowed: ["Pre-recorded vocal harmonies", "Auto-tune hardware", "Reading lyrics from a phone"],
+                disq: ["Lip-syncing to a vocal track.", "Using explicit lyrical content.", "Refusing to stop at the time buzzer."],
+                strategy: "Choose a song that highlights your comfortable range, not one that forces you to strain for notes you can't hit reliably.",
+                proTip: "Warm up your vocal cords with humming exercises 15 minutes before stage time. Never drink cold water right before singing."
+            },
+            "Poetry": {
+                objective: "Recite an original composition utilizing metaphor, rhythm, and profound voice modulation.",
+                theme: "Verses of Resistance & Reflection.",
+                requirements: ["3 hard copies of the poem for judges", "Original content declaration", "Microphone stand"],
+                checkpoints: ["Stanza 1: Hooking the audience", "Core: Building emotional cadence", "Conclusion: The lingering thought"],
+                guidelines: ["The poem must be strictly self-composed; plagiarism checks will be run.", "Performance relies on voice—no background music or props are permitted.", "Bilingual poems (e.g., Hindi-English mix) are allowed if the transition is poetic."],
+                criteria: [{crit: "Lyrical Content/Meaning", marks: 40}, {crit: "Voice Modulation", marks: 30}, {crit: "Rhythm and Flow", marks: 20}, {crit: "Audience Engagement", marks: 10}],
+                allowed: ["Reading from a physical diary", "Dramatic pauses", "Hand gestures"],
+                notAllowed: ["Background tracks", "Costumes or props", "Singing the verses"],
+                disq: ["Reciting someone else's published work.", "Exceeding the 3-minute limit.", "Using hate speech."],
+                strategy: "A 3-second pause before your most powerful line hits infinitely harder than rushing through the stanza.",
+                proTip: "Vary your volume. Drop to a near-whisper to draw the audience in, then project loudly for the emotional climax."
+            },
+            "Storytelling": {
+                objective: "Transport the audience into a vivid narrative using only pacing, facial expressions, and descriptive language.",
+                theme: "Myths, Memories, and Mysteries.",
+                requirements: ["A structured narrative arc", "Comfortable attire", "Clear articulation"],
+                checkpoints: ["Exposition: Setting the scene", "Climax: The narrative peak", "Resolution: The takeaway message"],
+                guidelines: ["The story must have a clear beginning, middle, and end within 5 minutes.", "The narrator must remain standing within the designated 5x5 ft stage box.", "Character voices are highly encouraged to distinguish dialogue."],
+                criteria: [{crit: "Plot Construction", marks: 35}, {crit: "Expressive Delivery", marks: 30}, {crit: "Pacing & Timing", marks: 20}, {crit: "Creativity", marks: 15}],
+                allowed: ["Character impersonations", "Movement within the stage box", "Interactive rhetorical questions"],
+                notAllowed: ["Reading from a script", "Physical props", "Excessive pacing off-stage"],
+                disq: ["Losing the storyline and abandoning the stage.", "Inappropriate or graphic themes.", "Exceeding time limit."],
+                strategy: "Make eye contact with specific individuals in the audience during key moments. It makes the story feel personal.",
+                proTip: "Show, don't tell. Instead of saying 'He was angry,' say 'His jaw clenched and his fists shook.'"
+            },
+            "Beatboxing": {
+                objective: "Simulate complex drum beats, basslines, and musical instrumentation utilizing only the vocal tract.",
+                theme: "Vocal Percussion & Sonic Innovation.",
+                requirements: ["Dynamic microphone (provided)", "2-minute prepared routine", "Water for hydration"],
+                checkpoints: ["Band 1: Foundational beats (kick/snare)", "Band 2: Complex technicality (zippers/rolls)", "Band 3: Musicality (humming + beats)"],
+                guidelines: ["No electronic loop stations or vocal effect pedals are allowed.", "Microphone cupping is permitted to enhance bass frequencies.", "In battle rounds, competitors have 60 seconds each to respond without physical contact."],
+                criteria: [{crit: "Technical Execution", marks: 40}, {crit: "Originality/Flow", marks: 30}, {crit: "Musicality", marks: 20}, {crit: "Crowd Control", marks: 10}],
+                allowed: ["Mic cupping", "Inward bass techniques", "Throat bass"],
+                notAllowed: ["External instruments", "Loop pedals", "Pre-recorded drops"],
+                disq: ["Touching the opponent during a battle.", "Damaging the microphone capsule.", "Using offensive words in vocal scratch."],
+                strategy: "Structure your routine like an EDM track: Intro, Build-up, Drop, and Outro. Random noises don't win; songs do.",
+                proTip: "Keep the mic close to your mouth but angle it slightly downward to prevent popping the capsule on heavy plosive sounds ('P' and 'B')."
+            },
+            "Skit": {
+                objective: "Deliver a compelling, multi-character theatrical performance conveying a powerful social message.",
+                theme: "Society, Satire, and Solutions.",
+                requirements: ["Team of 4 to 10 actors", "Minimalist, easily movable props", "Pre-approved script"],
+                checkpoints: ["Scene 1: Character introduction", "Scene 2: Conflict escalation", "Scene 3: Resolution & Message"],
+                guidelines: ["Performances must project voices naturally; no collar mics are provided.", "Sets must be set up within 60 seconds and cleared in 60 seconds.", "Overacting should be avoided unless explicitly used for comedic satire."],
+                criteria: [{crit: "Acting & Dialogue Delivery", marks: 35}, {crit: "Script & Message", marks: 30}, {crit: "Stage Utilization", marks: 20}, {crit: "Team Coordination", marks: 15}],
+                allowed: ["Chairs and tables (provided)", "Light stage makeup", "Sound effects (via DJ)"],
+                notAllowed: ["Elaborate heavy backdrops", "Dangerous stunts", "Live animals"],
+                disq: ["Targeting specific religious or political figures.", "Exceeding the 10-minute cap.", "Leaving props on stage after exit."],
+                strategy: "Block your scenes carefully. Ensure no actor ever has their back completely turned to the audience while speaking.",
+                proTip: "If the audience laughs, pause. 'Holding for laughs' prevents your next important line from being drowned out."
+            },
+            "Debate": {
+                objective: "Articulate persuasive arguments, deconstruct opposing views, and defend your stance with empirical evidence.",
+                theme: "Logic, Rhetoric, and Policy.",
+                requirements: ["Index cards for notes", "Formal school uniform", "Pre-researched statistics"],
+                checkpoints: ["Constructive: Building the case (3 mins)", "Rebuttal: Dismantling opponent (1.5 mins)", "Conclusion: Final appeal (30 secs)"],
+                guidelines: ["Format is Oxford-style: Proposition vs. Opposition.", "Arguments must cite credible sources; fabricated statistics yield heavy penalties.", "Ad hominem (personal attacks) against the opposing speaker are strictly barred."],
+                criteria: [{crit: "Logical Reasoning", marks: 40}, {crit: "Rebuttal Quality", marks: 30}, {crit: "Elocution & Confidence", marks: 20}, {crit: "Factual Accuracy", marks: 10}],
+                allowed: ["Referencing notes briefly", "Rhetorical questions", "Pacing behind the podium"],
+                notAllowed: ["Interrupting the speaker", "Using phones for live research", "Shouting or aggression"],
+                disq: ["Falsifying quotes or data.", "Using derogatory language.", "Ignoring the moderator's time bell."],
+                strategy: "Listen actively during their speech. Identifying one fatal flaw in their logic is better than bringing up ten minor points.",
+                proTip: "Signpost your arguments. Say 'My first point is X. My second is Y.' It makes it infinitely easier for judges to take notes."
+            },
+            "Face Painting": {
+                objective: "Transform a human canvas into a stunning visual masterpiece using color theory and contouring.",
+                theme: "Mythological Creatures & Elements.",
+                requirements: ["Cosmetic-grade, skin-safe paints", "Soft bristle brushes/sponges", "A willing partner/model"],
+                checkpoints: ["Phase 1: Base coat & blocking", "Phase 2: Intricate linework", "Phase 3: Highlighting & shadows"],
+                guidelines: ["The design must cover a minimum of 70% of the model's face.", "Models must keep their eyes closed during orbital painting for safety.", "Participants have exactly 60 minutes from the starting bell to the final brush stroke."],
+                criteria: [{crit: "Creativity of Design", marks: 35}, {crit: "Brush Technique", marks: 30}, {crit: "Color Blending", marks: 20}, {crit: "Overall Impact", marks: 15}],
+                allowed: ["Glitter (cosmetic only)", "Reference sketches", "Water cups"],
+                notAllowed: ["Stencils or stamps", "Prosthetics/Glue", "Acrylic or toxic paints"],
+                disq: ["Using unsafe craft paints on skin.", "Pre-drawing outlines before the timer.", "Model assisting in the painting."],
+                strategy: "Work from light colors to dark colors. It is almost impossible to cover black paint with yellow once applied.",
+                proTip: "Use a damp sponge instead of a brush for the base layer. It creates a smooth, streak-free canvas in half the time."
+            },
+            "Stand Painting": {
+                objective: "Produce an evocative acrylic/oil painting on canvas that captures the essence of an on-the-spot theme.",
+                theme: "On-the-Spot Reveal (Surrealism Focus).",
+                requirements: ["24x36 inch blank canvas", "Personal easel stand", "Drop cloth to protect floors"],
+                checkpoints: ["Band 1: Sketching & Composition", "Band 2: Underpainting & Blocking", "Band 3: Detailing & Texture"],
+                guidelines: ["The canvas must be entirely blank upon entry; gesso priming is allowed.", "Artists have 2.5 hours to interpret the theme and execute the painting.", "Only traditional mediums (Acrylic, Oil, Gouache) are permitted."],
+                criteria: [{crit: "Theme Interpretation", marks: 35}, {crit: "Composition & Balance", marks: 30}, {crit: "Medium Mastery", marks: 20}, {crit: "Originality", marks: 15}],
+                allowed: ["Palette knives", "Mixing mediums", "Easel attachments"],
+                notAllowed: ["Spray paint", "Digital aids/tablets", "Tracing projectors"],
+                disq: ["Bringing a pre-sketched canvas.", "Damaging the venue floor with paint.", "Plagiarizing a known artwork."],
+                strategy: "Don't get bogged down in tiny details early. Establish your foreground, midground, and background values first.",
+                proTip: "Step back 10 feet from your easel every 30 minutes. What looks good up close might lack contrast from a distance."
+            },
+            "Pot Painting": {
+                objective: "Elevate a standard terracotta pot into a vibrant, 360-degree piece of decorative art.",
+                theme: "Traditional Motifs & Modern Geometrics.",
+                requirements: ["Brushes and acrylic paints", "Water container and rags", "Varnish/Sealer spray"],
+                checkpoints: ["Phase 1: Base sealing & coating", "Phase 2: Pattern drafting", "Phase 3: 360-degree detailing"],
+                guidelines: ["Pots will be provided by the organizers to ensure uniformity in size and texture.", "The design must wrap continuously around the pot without awkward blank seams.", "3D embellishments are allowed but must not cover more than 20% of the surface."],
+                criteria: [{crit: "Neatness of Linework", marks: 35}, {crit: "Color Harmony", marks: 30}, {crit: "Wrap-around Composition", marks: 20}, {crit: "Use of 3D Elements", marks: 15}],
+                allowed: ["Mirrors, beads, or threads", "Masking tape for sharp lines", "Dotting tools"],
+                notAllowed: ["Fully covering the pot in cloth", "Using spray paint bases", "Pre-painted pots"],
+                disq: ["Swapping the provided pot.", "Interfering with a neighbor's workspace.", "Using offensive symbols."],
+                strategy: "Paint the inside rim. Leaving the inner lip raw terracotta breaks the illusion of a finished piece.",
+                proTip: "Terracotta is porous and drinks paint. Apply a quick base layer of white PVA glue or primer to make your colors pop vibrantly."
+            },
+            "Stone Painting": {
+                objective: "Transform naturally shaped river stones into miniature, highly detailed art objects.",
+                theme: "Nature in Miniature / Mandalas.",
+                requirements: ["Fine liner brushes", "Acrylic paints or paint pens", "Sealing varnish"],
+                checkpoints: ["Band 1: Stone selection & washing", "Band 2: Base coat & drying", "Band 3: Micro-detailing"],
+                guidelines: ["Participants will select 2 stones from a pile; only the best one is submitted.", "Designs should utilize the natural contours, bumps, and shapes of the stone.", "Mandala dotting must be perfectly symmetrical and raised for texture."],
+                criteria: [{crit: "Intricacy & Detailing", marks: 40}, {crit: "Integration with Stone Shape", marks: 30}, {crit: "Symmetry/Precision", marks: 20}, {crit: "Finish (Varnish)", marks: 10}],
+                allowed: ["Acrylic paint pens", "Dotting tools/toothpicks", "Hairdryers (for quick drying)"],
+                notAllowed: ["Carving/Chipping the stone", "Gluing multiple stones together", "Using stickers/decals"],
+                disq: ["Bringing outside stones.", "Submitting a completely unpainted stone.", "Using hazardous sealants indoors."],
+                strategy: "Let the shape of the rock dictate the art. A triangular rock makes a great owl, a flat oval makes a perfect mandala.",
+                proTip: "If doing a dot mandala, ensure your paint consistency is like heavy cream. Too thin, it runs; too thick, it forms peaks."
+            },
+            "Cooking": {
+                objective: "Prepare, cook, and plate a gourmet dish balancing flavor, texture, and visual appeal without an open flame.",
+                theme: "Fusion Cuisine (Fireless/Induction).",
+                requirements: ["Induction cooktop or microwave", "Pre-chopped ingredients", "Plating dishes and garnishes"],
+                checkpoints: ["Prep: Mise en place (15 mins)", "Cook: Flavor building (60 mins)", "Plate: Visual presentation (15 mins)"],
+                guidelines: ["All active cooking (boiling, frying, mixing) must happen strictly on the clock.", "Hygiene is paramount; gloves and hairnets must be worn at all times.", "Participants must present exactly two identical portions (one for display, one for tasting)."],
+                criteria: [{crit: "Taste & Flavor Balance", marks: 40}, {crit: "Plating & Aesthetics", marks: 25}, {crit: "Texture/Doneness", marks: 20}, {crit: "Hygiene & Prep", marks: 15}],
+                allowed: ["Pre-made basic sauces/pastes", "Battery-operated blenders", "Dry ice for presentation"],
+                notAllowed: ["Open gas flames/butane torches", "Pre-cooked proteins", "Store-bought assembled items"],
+                disq: ["Serving raw/undercooked poultry.", "Cross-contamination of chopping boards.", "Failing to clean the station post-cook."],
+                strategy: "Taste your food constantly. Adjust acidity, salt, and sweetness before plating.",
+                proTip: "Use 'negative space' on your plate. A smaller, tightly clustered presentation in the center of a large white plate looks highly professional."
+            },
+            "Videography": {
+                objective: "Shoot, edit, and render a cinematic micro-documentary capturing the spirit of the ROBONIX festival.",
+                theme: "The Pulse of the Fest.",
+                requirements: ["DSLR/Mirrorless or High-end Mobile", "Editing software (Premiere/CapCut)", "USB drive for submission"],
+                checkpoints: ["Morning: Capturing B-Roll", "Afternoon: Conducting interviews", "Evening: Editing & Color Grading"],
+                guidelines: ["Footage must be captured 100% on campus during the event day.", "Final video length must be strictly between 60 and 90 seconds.", "Audio leveling is critical; music must not drown out interview dialogue."],
+                criteria: [{crit: "Cinematography & Framing", marks: 35}, {crit: "Editing & Pacing", marks: 30}, {crit: "Audio Design/Mixing", marks: 20}, {crit: "Storytelling", marks: 15}],
+                allowed: ["Gimbals and tripods", "External microphones", "Copyright-free music"],
+                notAllowed: ["Stock footage downloads", "Drones (campus restriction)", "Pre-recorded segments"],
+                disq: ["Submitting past work.", "Using copyrighted mainstream music.", "Filming in restricted/private zones."],
+                strategy: "Shoot sequences, not just random clips. Get a wide shot, a medium shot, and a close-up of the same action for easy editing.",
+                proTip: "Sound is 50% of the video. Use J-cuts and L-cuts in your edit to make transitions between scenes feel seamless and professional."
+            },
+            "Photography": {
+                objective: "Capture striking, perfectly composed single-frame images that tell a story without words.",
+                theme: "Light, Shadow, and Emotion.",
+                requirements: ["Camera (DSLR/Mirrorless)", "Empty SD Card formatted on-site", "Knowledge of manual settings"],
+                checkpoints: ["Briefing: Theme reveal", "Shooting: 2-hour campus window", "Selection: Picking the Top 3 shots"],
+                guidelines: ["Only standard exposure and color correction edits are allowed (Lightroom/Snapseed).", "Removing or adding objects via Photoshop/AI generative fill is strictly banned.", "Photos must be submitted in high-res JPEG format alongside the RAW file to prove authenticity."],
+                criteria: [{crit: "Composition & Framing", marks: 40}, {crit: "Lighting & Exposure", marks: 30}, {crit: "Thematic Relevance", marks: 20}, {crit: "Focus/Sharpness", marks: 10}],
+                allowed: ["Interchangeable lenses", "Speedlights/Flashes", "Basic color grading"],
+                notAllowed: ["Composite imaging", "Over-saturating/HDR abuse", "Watermarks on submission"],
+                disq: ["Submitting AI-generated imagery.", "Harassing participants for forced poses.", "Failing to provide RAW files."],
+                strategy: "Look for leading lines and natural frames within the school's architecture to draw the viewer's eye to your subject.",
+                proTip: "Shoot in RAW. It preserves all the shadow and highlight data, allowing you to recover a slightly overexposed sky during editing."
+            },
+            "Quiz": {
+                objective: "Outpace opponents in recalling facts, solving lateral puzzles, and connecting abstract trivia.",
+                theme: "Tech, Pop Culture, & Global Affairs.",
+                requirements: ["Black/Blue ballpoint pen", "Sharp reflexes", "Broad general knowledge"],
+                checkpoints: ["Prelims: 30-question written test", "Semis: Direct Q&A rounds", "Finals: High-stakes Buzzer battle"],
+                guidelines: ["Teams of two will collaborate. No conferring during the buzzer rounds.", "On the buzzer, the first to press must answer within 3 seconds or face negative marks.", "The Quizmaster's decision regarding acceptable alternative answers is final."],
+                criteria: [{crit: "Correct Answers", marks: 60}, {crit: "Speed (Buzzer)", marks: 20}, {crit: "Risk Management", marks: 10}, {crit: "Penalty Avoidance", marks: 10}],
+                allowed: ["Conferring in written rounds", "Guessing", "Passing questions"],
+                notAllowed: ["Smartwatches", "Shouting answers from audience", "Arguing with the Quizmaster"],
+                disq: ["Using a hidden mobile device.", "Receiving prompts from the audience.", "Repeatedly buzzing before the question finishes without answering."],
+                strategy: "In negative marking rounds, only buzz if you are 90% sure. Let opponents lose points on blind guesses.",
+                proTip: "Listen to the whole question. Quizmasters often put the most crucial, identifying clue in the final 5 words."
+            },
+            "Sudoku": {
+                objective: "Solve complex numerical grids utilizing advanced deductive logic and pattern recognition.",
+                theme: "Number Theory & Absolute Logic.",
+                requirements: ["HB Pencils and erasers", "Focus and silence", "Knowledge of advanced solving techniques"],
+                checkpoints: ["Grid 1: Easy/Warm-up (10 mins)", "Grid 2: Medium/Strategic (15 mins)", "Grid 3: Hard/Diabolical (20 mins)"],
+                guidelines: ["Participants must complete 3 grids of escalating difficulty.", "No calculators, scratch paper, or digital aids are permitted; write on the grid sheet.", "Ties are broken by the timestamp of the final, fully correct submission."],
+                criteria: [{crit: "Accuracy of Grids", marks: 60}, {crit: "Speed of Completion", marks: 30}, {crit: "Cleanliness of Sheet", marks: 10}, {crit: "Rule Adherence", marks: 0}],
+                allowed: ["Pencil annotations (small numbers)", "Erasers", "Submitting early"],
+                notAllowed: ["Pens", "Calculators", "Leaving the room"],
+                disq: ["Looking at a neighbor's grid.", "Continuing to write after the final bell.", "Using a phone."],
+                strategy: "Don't guess. If you reach a dead end, look for advanced patterns like X-Wings or Naked Pairs instead of randomly filling numbers.",
+                proTip: "Use light pencil marks for candidates in the corners of cells. Once you lock a number, cleanly erase the other candidates to avoid visual clutter."
+            },
+            "Chess": {
+                objective: "Outmaneuver the opponent's pieces, control the board, and deliver a decisive checkmate under time pressure.",
+                theme: "Grandmaster Strategy & Foresight.",
+                requirements: ["Familiarity with algebraic notation", "Complete silence", "Mental endurance"],
+                checkpoints: ["Opening: Center control", "Middlegame: Tactical combinations", "Endgame: Precision conversion"],
+                guidelines: ["Matches strictly follow FIDE Rapid rules with a 10 minutes + 5 seconds increment time control.", "The 'Touch-Move' rule is in full effect. If you touch a piece, you must move it.", "Illegal moves result in a time penalty; two illegal moves lose the game."],
+                criteria: [{crit: "Match Victory", marks: 50}, {crit: "Time Management", marks: 20}, {crit: "Positional Advantage", marks: 20}, {crit: "Notation Accuracy", marks: 10}],
+                allowed: ["Adjusting pieces on your time (J'adoube)", "Offering a draw", "Resigning gracefully"],
+                notAllowed: ["Chess engines/phones", "Distracting the opponent", "Stopping the clock improperly"],
+                disq: ["Consulting a spectator/coach.", "Hiding captured pieces.", "Refusing a handshake post-game."],
+                strategy: "Develop your pieces rapidly and castle early. A safe king is the foundation of a strong attack.",
+                proTip: "Manage your clock. Spending 5 minutes on move 10 might find the 'best' move, but you will lose on time in the endgame. Play practical moves quickly."
+            },
+            "Cricket": {
+                objective: "Outscore the opposition through aggressive batting, disciplined bowling, and agile fielding in a T10 format.",
+                theme: "Athletic Precision & Team Synergy.",
+                requirements: ["Complete team kit (whites/jerseys)", "Abdo guards/pads", "Spiked shoes (if on turf)"],
+                checkpoints: ["Powerplay: Field restrictions", "Middle Overs: Strike rotation", "Death Overs: Maximum acceleration"],
+                guidelines: ["Matches are 10 overs per side. Bowlers are restricted to a maximum of 2 overs each.", "Chucking (illegal arm action) will result in a warning, followed by a no-ball call.", "Umpire decisions regarding LBW, run-outs, and boundaries are absolute and final."],
+                criteria: [{crit: "Runs Scored", marks: 40}, {crit: "Wickets Taken", marks: 30}, {crit: "Fielding/Catches", marks: 20}, {crit: "Economy Rate", marks: 10}],
+                allowed: ["Switch hits", "Tactical timeouts", "Sledging (within limits)"],
+                notAllowed: ["Ball tampering", "Dissent against umpires", "Metal spikes on astroturf"],
+                disq: ["Playing an unregistered ringer.", "Physical altercation on the pitch.", "Refusing to take the field."],
+                strategy: "In a 10-over game, dot balls are gold. Bowl wide yorkers to starve the batsmen of boundaries rather than aiming for the stumps.",
+                proTip: "Call loudly when running between the wickets. Hesitation causes 90% of run-outs. 'Yes', 'No', or 'Wait'—be decisive."
+            },
+            "Football": {
+                objective: "Control possession, execute tactical passes, and breach the opponent's defense to score goals.",
+                theme: "Stamina, Formations & Footwork.",
+                requirements: ["Shin guards (mandatory)", "Turf shoes/cleats", "Uniform team jerseys"],
+                checkpoints: ["First Half: High press & pacing", "Halftime: Tactical shifts", "Second Half: Endurance & counters"],
+                guidelines: ["Matches are 5-a-side with 15-minute halves and rolling substitutions.", "Slide tackling is strictly prohibited to prevent injuries and will result in a yellow card.", "A red card results in the player's ejection, and the team must play a man down."],
+                criteria: [{crit: "Goals Scored", marks: 50}, {crit: "Defensive Clean Sheet", marks: 30}, {crit: "Possession Control", marks: 10}, {crit: "Discipline (Cards)", marks: 10}],
+                allowed: ["Rolling subs at halfway line", "Zonal marking", "Quick free kicks"],
+                notAllowed: ["Slide tackles", "Dissent/Abuse", "Studs up challenges"],
+                disq: ["Receiving a straight red card for violent conduct.", "Fielding more than 5 players.", "Playing without shin guards."],
+                strategy: "In 5-a-side, transitions are rapid. Defend as a compact unit of four, and counter-attack with pace.",
+                proTip: "Don't just watch the ball. Constantly scan over your shoulder before receiving a pass so you know exactly where the pressure is coming from."
+            }
+        };
+
         function getCategoryData(category, name) {
-            let guidelines, criteria, objective, theme, requirements, allowed, notAllowed, disq, strategy;
-
-            if (category === "TECH & ROBOTICS") {
-                objective = `To design, build, and deploy an automated or manually controlled system to conquer the ${name} arena.`;
-                theme = "Automation, Precision, and Futuristic Mechanics.";
-                requirements = ["Custom-built hardware/software", "Power supply strictly under 12V", "Safety switches integrated", "Technical documentation portfolio"];
-                criteria = [
-                    { crit: "Design & Build Quality", marks: 30 },
-                    { crit: "Task Completion / Speed", marks: 40 },
-                    { crit: "Innovation & Logic", marks: 20 },
-                    { crit: "Team Coordination", marks: 10 }
-                ];
-                allowed = ["Spare batteries", "Basic toolkits", "Pre-written libraries"];
-                notAllowed = ["Jamming devices", "Flammable materials", "Off-the-shelf kits"];
-                disq = ["Damaging the official arena.", "Touching the bot without permission.", "Using prohibited voltages."];
-                strategy = "Focus on reliability over raw speed. A slow but consistent system beats a fast but unstable one.";
-            } else if (category === "ESPORTS") {
-                objective = `To demonstrate superior tactical gameplay, reflexes, and team synergy in the competitive ${name} bracket.`;
-                theme = "Cyber-Warfare and Strategic Dominance.";
-                requirements = ["Valid ID for age verification", "Pre-installed game version", "Stable ping tools disabled", "Headphones with mic"];
-                criteria = [
-                    { crit: "Match Placement / Rank", marks: 50 },
-                    { crit: "Eliminations / Frags", marks: 30 },
-                    { crit: "Objective Control", marks: 10 },
-                    { crit: "Fair Play", marks: 10 }
-                ];
-                allowed = ["Mobile cooling fans", "Finger sleeves", "Personal wired earphones"];
-                notAllowed = ["Emulators or PC setups", "Triggers/attachments", "Cheats/Mods/Scripts"];
-                disq = ["Using aimbot or wallhack.", "Account sharing.", "Toxic behavior."];
-                strategy = "Communication is key. Establish a clear shot-caller and stick to the strategy.";
-            } else if (category === "CULTURAL") {
-                objective = `To showcase artistic expression, stage presence, and emotional delivery through the medium of ${name}.`;
-                theme = "Heritage meets Modern Expression.";
-                requirements = ["High-quality audio track on USB", "Props declared during registration", "Appropriate costumes", "Performance script/lyrics"];
-                criteria = [
-                    { crit: "Execution & Synchronization", marks: 30 },
-                    { crit: "Expression & Confidence", marks: 30 },
-                    { crit: "Costume & Props Usage", marks: 20 },
-                    { crit: "Audience Impact", marks: 20 }
-                ];
-                allowed = ["Handheld props", "Background dancers", "Custom soundtracks"];
-                notAllowed = ["Liquid cannons", "Offensive language", "Live animals"];
-                disq = ["Exceeding the time limit.", "Violating costume guidelines.", "Damaging stage equipment."];
-                strategy = "Engage with the audience and judges. Eye contact covers up minor mistakes.";
-            } else if (category === "CREATIVE") {
-                objective = `To translate imagination into tangible art in the ${name} competition.`;
-                theme = "Visions of a Sustainable Future.";
-                requirements = ["Personal art supplies", "Base medium (provided)", "A title card for the artwork", "Protective clothing"];
-                criteria = [
-                    { crit: "Creativity & Originality", marks: 35 },
-                    { crit: "Technical Skill", marks: 30 },
-                    { theme: "Adherence to Theme", marks: 20 },
-                    { crit: "Overall Presentation", marks: 15 }
-                ];
-                allowed = ["Easel stands", "Multiple mediums", "Reference photographs"];
-                notAllowed = ["Pre-drawn outlines", "Stencils", "Digital manipulation"];
-                disq = ["Bringing pre-finished pieces.", "Interfering with others.", "Plagiarizing."];
-                strategy = "Block out primary shapes in the first 30 minutes. Save the end for detailing.";
-            } else {
-                objective = `To outsmart, outplay, and demonstrate elite proficiency in ${name}.`;
-                theme = "Mental Agility and Physical Endurance.";
-                requirements = ["Standard uniform", "Proper footwear", "School ID card", "Water bottle"];
-                criteria = [
-                    { crit: "Core Skill / Scoring", marks: 50 },
-                    { crit: "Strategy & Adaptation", marks: 25 },
-                    { crit: "Rule Adherence", marks: 15 },
-                    { crit: "Sportsmanship", marks: 10 }
-                ];
-                allowed = ["Standard personal gear", "Towels/sweatbands", "Pre-match warmups"];
-                notAllowed = ["Performance-enhancing substances", "Disruptive noisemakers", "Arguing with officials"];
-                disq = ["Cheating.", "Physical altercation.", "Refusal to follow instructions."];
-                strategy = "Stay calm under pressure. Analyze your opponent's weaknesses early.";
-            }
-
-            // --- UNIQUE GUIDELINES ASSIGNMENT ---
-            switch(name) {
-                case "Codebuster":
-                    guidelines = [
-                        "Participants must use provided IDEs; no external drives allowed.",
-                        "Code must be fully commented and compiled before the timer ends.",
-                        "Internet access is restricted to official documentation sites only.",
-                        "Plagiarism of code snippets will lead to instant disqualification.",
-                        "In case of a tie, the team with the most optimized execution time wins."
-                    ];
-                    break;
-                case "Line Follower":
-                    guidelines = [
-                        "Bots must autonomously navigate a black line on a white background.",
-                        "Maximum bot dimensions are 20cm x 20cm.",
-                        "A maximum of 2 restarts are allowed per run, with a time penalty.",
-                        "Calibration must be done during the allocated 10-minute setup window.",
-                        "Any bot leaving the track completely will be forced to restart."
-                    ];
-                    break;
-                case "Robo War":
-                    guidelines = [
-                        "Bots must weigh under 15kg; weigh-in is mandatory before matches.",
-                        "Weapons must be purely mechanical (spinners, flippers allowed).",
-                        "Matches are 3 minutes long; immobilized bots are counted out after 10 seconds.",
-                        "Radio frequency checks are mandatory to prevent interference.",
-                        "Intentional damage to the arena safety glass is forbidden."
-                    ];
-                    break;
-                case "Robo Race":
-                    guidelines = [
-                        "The track contains obstacles, ramps, and sharp turns.",
-                        "Bots can be wired or wireless, but wires must not tangle.",
-                        "Time penalties apply for skipping obstacles or going off-track.",
-                        "Only the designated driver and one spotter may be in the control zone.",
-                        "Bots must cross the finish line fully intact to register a valid time."
-                    ];
-                    break;
-                case "Robo Pick and Place":
-                    guidelines = [
-                        "The arm must successfully grip, lift, and drop specific blocks.",
-                        "Scoring is based on the number of blocks placed accurately in the target zone.",
-                        "Manual intervention during the run is strictly penalized.",
-                        "Mechanisms must not damage the target blocks during gripping.",
-                        "Sorting blocks by color yields bonus points."
-                    ];
-                    break;
-                case "Website Designing":
-                    guidelines = [
-                        "Designs must be responsive and function on both mobile and desktop views.",
-                        "Only HTML, CSS, and vanilla JS are allowed (no external UI frameworks).",
-                        "All assets (images/icons) must be royalty-free and credited.",
-                        "Participants have exactly 3 hours to develop the site from scratch.",
-                        "Final submission must be a single zipped folder containing all files."
-                    ];
-                    break;
-                case "Model Making":
-                    guidelines = [
-                        "Models must strictly adhere to the designated 'Smart City' theme.",
-                        "Use of eco-friendly and recycled materials is highly encouraged.",
-                        "Base area must not exceed 1 meter by 1 meter.",
-                        "Functional elements (lights, moving parts) will score higher.",
-                        "Teams must present a 2-minute verbal explanation of their model."
-                    ];
-                    break;
-                case "Free Fire":
-                    guidelines = [
-                        "Matches are played in Squad format (4 players per team).",
-                        "Only mobile devices are allowed; tablets and emulators are strictly banned.",
-                        "Matches will consist of 3 maps: Bermuda, Purgatory, and Kalahari.",
-                        "Use of glitches or map exploits results in immediate team elimination.",
-                        "All players must record their screen during the match for review."
-                    ];
-                    break;
-                case "BGMI":
-                    guidelines = [
-                        "Teams must drop into the designated maps as announced by the admin.",
-                        "Point system follows standard competitive formats (Position + Finish points).",
-                        "Room ID and password will be shared exactly 10 minutes before start.",
-                        "Teaming up with opposing squads is a bannable offense.",
-                        "Players must maintain a minimum of 30 FPS screen recording."
-                    ];
-                    break;
-                case "Dance":
-                    guidelines = [
-                        "Performances can be solo or group (maximum of 8 members).",
-                        "Choreography must be original and devoid of offensive or vulgar gestures.",
-                        "Track duration is strictly limited to 3-5 minutes.",
-                        "Stage props are allowed but must be cleared within 30 seconds post-performance.",
-                        "Judging is based on rhythm, coordination, expressions, and costume."
-                    ];
-                    break;
-                case "Ramp Walk":
-                    guidelines = [
-                        "Participants must strictly follow the announced theme.",
-                        "Walk duration is limited to 2 minutes per participant including poses.",
-                        "Props and accessories must be safe and easily manageable.",
-                        "Judging criteria includes confidence, posture, attire, and stage presence.",
-                        "Background music will be provided by the event DJ."
-                    ];
-                    break;
-                case "Singing":
-                    guidelines = [
-                        "Participants may sing with one accompanying instrument or a karaoke track.",
-                        "Vocals must be live; lip-syncing leads to immediate disqualification.",
-                        "Song choice must be clean and appropriate for a school setting.",
-                        "Time limit is 4 minutes, including setup and soundcheck.",
-                        "Evaluation focuses on pitch, rhythm, vocal range, and expression."
-                    ];
-                    break;
-                case "Poetry":
-                    guidelines = [
-                        "Poems must be original compositions in English or Hindi.",
-                        "Recitation should not exceed 3 minutes.",
-                        "Reading from a paper or device is allowed but memorization scores higher.",
-                        "Voice modulation and emotional delivery carry high weightage.",
-                        "Plagiarism checks will be conducted randomly."
-                    ];
-                    break;
-                case "Storytelling":
-                    guidelines = [
-                        "Narratives must be engaging, well-paced, and fit the 5-minute limit.",
-                        "Stories can be fictional or based on real events, but must be appropriate.",
-                        "Participants must not use any props; storytelling relies entirely on voice and gestures.",
-                        "Eye contact with the audience and judges is heavily evaluated.",
-                        "Overly graphic or violent themes are not permitted."
-                    ];
-                    break;
-                case "Beatboxing":
-                    guidelines = [
-                        "No electronic vocal effects or loop pedals allowed.",
-                        "Participants must perform a continuous 2-minute routine.",
-                        "Microphones will be standard dynamic mics; cupping is allowed.",
-                        "Battles format in later rounds: two 1-minute rounds per beatboxer.",
-                        "Musicality, technicality, and originality are the core judging criteria."
-                    ];
-                    break;
-                case "Skit":
-                    guidelines = [
-                        "Teams must consist of 4 to 10 members.",
-                        "Scripts must carry a strong social message without political/religious bias.",
-                        "Performance duration is strictly between 8 and 10 minutes.",
-                        "Elaborate sets are not allowed; use minimal, easily movable props.",
-                        "Dialogue delivery must be loud and clear without relying on microphones."
-                    ];
-                    break;
-                case "Debate":
-                    guidelines = [
-                        "Format: 3 minutes for constructive speech, 1 minute for rebuttal.",
-                        "Personal attacks on opponents are strictly forbidden.",
-                        "Participants must clearly cite the sources of their statistical data.",
-                        "Interrupting the opponent during their speaking time is penalized.",
-                        "The moderator's decision on time and conduct is final."
-                    ];
-                    break;
-                case "Face Painting":
-                    guidelines = [
-                        "Only skin-safe, cosmetic-grade paints are permitted.",
-                        "Participants have exactly 1 hour to complete the design on their partner.",
-                        "Stencils and temporary tattoos are strictly prohibited.",
-                        "The design must cover at least 70% of the face.",
-                        "Both the painter and the model will be evaluated for overall presentation."
-                    ];
-                    break;
-                case "Stand Painting":
-                    guidelines = [
-                        "Artists must bring their own easel stands and protective drop cloths.",
-                        "The canvas size must be exactly 24x36 inches.",
-                        "Only acrylic or oil paints are permitted.",
-                        "Participants have 2.5 hours to finish the painting.",
-                        "The artwork must directly reflect the given on-the-spot theme."
-                    ];
-                    break;
-                case "Pot Painting":
-                    guidelines = [
-                        "Terracotta pots of standard size will be provided by organizers.",
-                        "Designs must cover the entire outer surface of the pot.",
-                        "3D elements (like glued beads or mirrors) are allowed.",
-                        "Participants must bring their own brushes, paints, and water cups.",
-                        "Judging focuses on neatness, color harmony, and creativity."
-                    ];
-                    break;
-                case "Stone Painting":
-                    guidelines = [
-                        "Participants must collect their stones from the registration desk.",
-                        "Intricate detailing and using the natural shape of the stone are encouraged.",
-                        "Use of fine liners and dotting tools is permitted.",
-                        "The painted stone must be varnished or sealed within the 90-minute limit.",
-                        "Themes are open, but must remain visually cohesive."
-                    ];
-                    break;
-                case "Cooking":
-                    guidelines = [
-                        "Dishes must be prepared without the use of open fire (induction/microwave only).",
-                        "Participants have 90 minutes to prepare and plate two portions.",
-                        "Ingredients must be pre-chopped, but all cooking must happen on-site.",
-                        "Hygiene, workplace cleanliness, and safe food handling are strictly monitored.",
-                        "Judging is based on taste, presentation, texture, and creativity."
-                    ];
-                    break;
-                case "Videography":
-                    guidelines = [
-                        "Raw footage must be shot entirely within the school campus on event day.",
-                        "Final edits must be between 60 to 90 seconds long.",
-                        "Editing can be done on laptops or mobile devices.",
-                        "Copyright-free music must be used and credited in the final frame.",
-                        "Submissions must be in MP4 format via USB drive."
-                    ];
-                    break;
-                case "Photography":
-                    guidelines = [
-                        "Photos must be submitted in RAW and JPEG formats.",
-                        "Heavy digital manipulation (adding/removing objects) is prohibited.",
-                        "Only basic color correction and cropping are allowed.",
-                        "The specific theme will be revealed 10 minutes before the competition window.",
-                        "Participants must submit their top 3 photos before the deadline."
-                    ];
-                    break;
-                case "Quiz":
-                    guidelines = [
-                        "Teams of two will compete through written prelims and stage finals.",
-                        "Use of smartphones or smartwatches during any round is strictly prohibited.",
-                        "The Quizmaster's decision is final regarding acceptable answers.",
-                        "Negative marking applies during specific buzzer rounds.",
-                        "Prompting from the audience will lead to immediate question cancellation."
-                    ];
-                    break;
-                case "Sudoku":
-                    guidelines = [
-                        "Participants must solve 3 puzzles of increasing difficulty within 45 minutes.",
-                        "Erasers and pencils are allowed; no calculators or digital aids.",
-                        "Time of completion serves as the tiebreaker.",
-                        "Leaving the room during the competition is not permitted.",
-                        "Any attempt to copy from neighbors results in immediate disqualification."
-                    ];
-                    break;
-                case "Chess":
-                    guidelines = [
-                        "Matches follow standard FIDE rapid rules with a 10+5 time control.",
-                        "Touch-move rule is strictly enforced at all tables.",
-                        "Players must record their moves on the provided scoresheets.",
-                        "Distracting the opponent or making excessive noise is penalized.",
-                        "Players must shake hands before and after each game."
-                    ];
-                    break;
-                case "Cricket":
-                    guidelines = [
-                        "Matches are 6 overs per side; standard tennis ball tournament rules apply.",
-                        "Teams must report in full sportswear 15 minutes before the toss.",
-                        "Throwing (chucking) is not allowed; bowlers will be called for no-balls.",
-                        "Only 2 fielders are allowed outside the circle for the first 2 overs.",
-                        "Umpire decisions are final; dissent will incur penalty runs."
-                    ];
-                    break;
-                case "Football":
-                    guidelines = [
-                        "Matches are 5-a-side with a duration of 10 minutes per half.",
-                        "Shin guards and standard sports shoes (no metal studs) are mandatory.",
-                        "Slide tackling is strictly prohibited to prevent injuries.",
-                        "Rolling substitutions are allowed but must happen at the halfway line.",
-                        "Yellow and red card systems are in full effect."
-                    ];
-                    break;
-            }
-
-            return { objective, theme, requirements, guidelines, criteria, allowed, notAllowed, disq, strategy };
+            // Fallback just in case, though the map covers all
+            return eventDataMap[name] || {
+                objective: "To demonstrate elite proficiency.",
+                theme: "Competition & Skill.",
+                requirements: ["Standard gear", "ID Card", "Water bottle"],
+                checkpoints: ["Stage 1", "Stage 2", "Stage 3"],
+                guidelines: ["Follow referee instructions.", "Maintain sportsmanship.", "Respect the timer."],
+                criteria: [{crit: "Core Skill", marks: 50}, {crit: "Strategy", marks: 30}, {crit: "Execution", marks: 20}],
+                allowed: ["Standard gear", "Warmups"],
+                notAllowed: ["Cheating", "Arguing"],
+                disq: ["Physical altercation.", "Refusal to follow rules."],
+                strategy: "Stay calm and focused.",
+                proTip: "Review the rules carefully."
+            };
         }
 
         const urlParams = "?auto=format&fit=crop&w=800&q=80";
@@ -1155,12 +1235,6 @@
                 "https://images.unsplash.com/photo-1551836022-4c4c79cb2541" + urlParams,
                 "https://images.unsplash.com/photo-1524178232363-1fb2b075b655" + urlParams,
                 "https://images.unsplash.com/photo-1551818255-e6e10975bc17" + urlParams
-            ],
-            "artist-painting": [
-                "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b" + urlParams,
-                "https://images.unsplash.com/photo-1513364776144-60967b0f800f" + urlParams,
-                "https://images.unsplash.com/photo-1515405299443-f7157559c1e3" + urlParams,
-                "https://images.unsplash.com/photo-1501472312651-726afe119ff1" + urlParams
             ],
             "face-paint": [
                 "https://images.unsplash.com/photo-1500462859197-19271124bcc7" + urlParams,
@@ -1399,6 +1473,12 @@
                         <ul style="margin-bottom: 15px;">
                             ${data.guidelines.map(g => `<li>${g}</li>`).join('')}
                         </ul>
+                        
+                        <h3 class="subheading">Checkpoints / Bands</h3>
+                        <ul style="margin-bottom: 15px;">
+                            ${data.checkpoints.map(cp => `<li>${cp}</li>`).join('')}
+                        </ul>
+
                         ${img1 ? `
                         <div class="image-grid single-col">
                             <img src="${img1}" alt="${event.name} Guidelines">
@@ -1465,7 +1545,7 @@
                             </p>
                             <div style="margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
                                 <p style="font-weight: bold; color: var(--accent-purple); margin-bottom: 4px;">Pro Tip:</p>
-                                <p>Review the Judging Criteria meticulously. Optimize your performance to score max points in highest weighted categories.</p>
+                                <p>${data.proTip}</p>
                             </div>
                         </div>
                     </div>
